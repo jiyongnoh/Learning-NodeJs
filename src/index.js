@@ -146,6 +146,25 @@ const msgHandler3 = (roomId) => {
     document.querySelector("#messageInput").value = "";
   }
 };
+// 그룹 채팅 키핸들러
+const msgKeyHandler3 = (e, roomId) => {
+  const msg = document.querySelector("#messageInput").value;
+  // 채팅 메시지가 있을 경우만 실행
+  if (e.key === "Enter" && msg) {
+    const date = new Date();
+    const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+
+    // 소켓 서버에 msg 트리거 발생 및 데이터 전달.
+    socket.emit("groupMsg", {
+      roomId,
+      nickname: login_id ? login_id : "ㅇㅇ",
+      msg,
+      time,
+    });
+    // 채팅 메시지 input 초기화
+    document.querySelector("#messageInput").value = "";
+  }
+};
 // 방 생성 핸들러
 const createRoomHander = () => {
   const roomId = document.querySelector("#roomName").value;
@@ -289,6 +308,7 @@ socket.on("joinRoom", (data) => {
           type="text"
           id="messageInput"
           placeholder="메시지를 입력하세요..."
+          onkeypress="msgKeyHandler3(event, '${roomId}')"
         />
         <button id="sendButton" onclick="msgHandler3('${roomId}')">전송</button>
         <button onclick="leaveRoomHander('${roomId}')">나가기</button>
