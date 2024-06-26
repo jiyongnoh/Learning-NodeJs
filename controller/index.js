@@ -644,6 +644,8 @@ const pathController = {
   },
 };
 
+console.log("dd");
+
 const errController = {
   logErrors: (err, req, res, next) => {
     console.error(err.stack);
