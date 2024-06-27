@@ -96,6 +96,7 @@ const kakaoPayController = {
       parsepUid = parseInput.partner_user_id;
       // console.log(parseInput);
 
+      // 카카오페이 결제 요청
       const response = await axios.post(
         `https://open-api.kakaopay.com/online/v1/payment/approve`,
         parseInput,
@@ -112,12 +113,12 @@ const kakaoPayController = {
       const { tid, partner_order_id, payment_method_type, amount } =
         response.data;
 
-      // 결제 성공 - DB 만료일 처리
+      // 카카오페이 결제 성공 - DB 만료일 갱신
       if (response.status === 200) {
         console.log(`KakaoPay Approve Success! - ${parsepUid}`);
         res.status(200).json({ message: "KakaoPay Approve Success!" });
 
-        // TODO DB 관련 처리
+        // Plan Info DB에서 partner_order_id를 통한 결제 정보 가져오기
         const plan_info_table = Plan_Table_Info["Info"].table;
         const plan_info_attribute = Plan_Table_Info["Info"].attribute;
 
@@ -129,10 +130,11 @@ const kakaoPayController = {
 
         // console.log(plan_info_select_data[0]);
 
+        // 현재 결제한 partner_order_id 플랜의 이용권 기간
         const { plan_period } = plan_info_select_data[0];
 
-        /* Plan DB 처리 */
-        // 1. SELECT TEST (row가 있는지 없는지 검사)
+        /* User Plan DB 처리 */
+        // 1. SELECT (User가 있는지 없는지 검사)
         const plan_table = Plan_Table_Info["Plan"].table;
         const plan_attribute = Plan_Table_Info["Plan"].attribute;
 
@@ -142,28 +144,35 @@ const kakaoPayController = {
           plan_select_query
         );
 
-        // 2. UPDATE TEST (row값이 있는 경우 실행)
+        // 2. UPDATE (User가 있는 경우)
         if (plan_select_data[0]) {
+          // expirationDate === User 만료일
           const { expirationDate } = plan_select_data[0];
           const today = moment().tz("Asia/Seoul").format("YYYY-MM-DD HH:mm:ss");
           let update_expirationDate_value = "";
 
-          // expirationDate 지났는지 여부 확인
-          if (new Date(expirationDate) < new Date(today))
+          // User 만료일이 지난 경우
+          if (new Date(expirationDate) < new Date(today)) {
+            // 오늘 날짜에서 플랜 기간을 더한 날짜를 갱신 만료일로 설정
             update_expirationDate_value = addDays(plan_period)
               .toISOString()
               .slice(0, 19)
               .replace("T", " ");
-          else
+          }
+          // User 만료일이 지나지 않은 경우
+          else {
+            // 만료일에서 플랜 기간을 더한 날짜를 갱신 만료일로 설정
             update_expirationDate_value = addDays(plan_period, expirationDate)
               .toISOString()
               .slice(0, 19)
               .replace("T", " ");
+          }
 
           console.log(
             "update_expirationDate_value: " + update_expirationDate_value
           );
 
+          // User Plan DB에 update_expirationDate_value 만료일 갱신
           const update_query = `UPDATE ${plan_table} SET ${Object.values(
             plan_attribute
           )
@@ -200,16 +209,19 @@ const kakaoPayController = {
             }
           );
         }
-        // 3. INSERT TEST (row값이 없는 경우 실행)
+        // 3. INSERT (User가 없는 경우 실행)
         else {
+          // 결제한 적이 없는 User - 오늘 날짜에서 플랜 기간을 더한 날짜를 갱신 만료일로 설정
           let insert_expirationDate_value = addDays(plan_period)
             .toISOString()
             .slice(0, 19)
             .replace("T", " ");
+
           console.log(
             "insert_expirationDate_value: " + insert_expirationDate_value
           );
 
+          // User Plan DB에 insert_expirationDate_value 만료일 추가
           const insert_query = `INSERT INTO ${plan_table} (${Object.values(
             plan_attribute
           ).join(", ")}) VALUES (${Object.values(plan_attribute)
@@ -245,7 +257,7 @@ const kakaoPayController = {
           );
         }
 
-        // Plan_Log Insert 처리
+        /* Plan Log DB Insert */
         const plan_log_table = Plan_Table_Info["Log"].table;
         const plan_log_attribute = Plan_Table_Info["Log"].attribute;
 
@@ -275,10 +287,14 @@ const kakaoPayController = {
             else console.log("Plan_Log DB Insert Success!");
           }
         );
+
+        // return res.status(200).json({ message: "Payment Sussess! - 200" });
       }
+      // 카카오페이 결제 실패
+      // return res.status(404).json({ message: "Payment Fail! - 404" });
     } catch (err) {
       console.log(err);
-      res.status(500).json({ message: "Server Error - 500" });
+      res.status(500).json({ message: "Server Error - 500" + err.message });
     }
   },
 };

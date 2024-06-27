@@ -34,9 +34,9 @@ const { vaildateTokenConsulting, vaildatePlan } = loginController;
 router.get("/", (req, res) => {
   res.send("Welcome to the GPT API");
 });
+
 // 감정 분석
 router.post("/emotion", postOpenAIEmotionAnalyze);
-
 // EBT 결과 분석
 router.post("/analysis", postOpenAIPsychologicalAnalysis);
 // PT 결과 분석
