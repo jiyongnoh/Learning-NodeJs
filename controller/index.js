@@ -644,8 +644,6 @@ const pathController = {
   },
 };
 
-console.log("Soyes 종합 서버 Start");
-
 const errController = {
   logErrors: (err, req, res, next) => {
     console.error(err.stack);
