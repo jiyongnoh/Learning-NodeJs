@@ -76,6 +76,7 @@ const kakaoPayController = {
         }
       );
       // console.log(response.data);
+      req.session.tid = response.data.tid; // 세션에 tid 저장
       return res.json({ data: response.data });
     } catch (err) {
       console.error(err.response.data);
@@ -99,7 +100,7 @@ const kakaoPayController = {
       // 카카오페이 결제 요청
       const response = await axios.post(
         `https://open-api.kakaopay.com/online/v1/payment/approve`,
-        parseInput,
+        { ...parseInput, tid: req.session.tid },
         {
           headers: {
             Authorization: `SECRET_KEY ${process.env.KAKAO_PAY_SERCET_KEY}`,
@@ -109,6 +110,7 @@ const kakaoPayController = {
         }
       );
 
+      delete req.session.tid; // 세션 tid 삭제
       // console.log(response.data);
       const { tid, partner_order_id, payment_method_type, amount } =
         response.data;

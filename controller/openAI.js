@@ -691,6 +691,7 @@ const openAIController = {
           date,
           JSON.stringify({ ...mailOptions, date }),
           type,
+          tScore,
         ];
         // console.log(insert_value);
 

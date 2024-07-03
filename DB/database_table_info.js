@@ -285,6 +285,7 @@ const EBT_Table_Info = {
       attr1: "date",
       attr2: "ebt_analysis",
       attr3: "ebt_type",
+      attr4: "ebt_tScore",
     },
   },
 };
