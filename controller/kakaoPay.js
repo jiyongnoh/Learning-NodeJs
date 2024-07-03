@@ -299,6 +299,40 @@ const kakaoPayController = {
       res.status(500).json({ message: "Server Error - 500" + err.message });
     }
   },
+  // User Expiration Select
+  postUserExpiration: async (req, res) => {
+    console.log("UserExpiration API 호출");
+    const { data } = req.body;
+    let parseInput, parsepUid;
+    try {
+      // 파싱. Client JSON 데이터
+      if (typeof data === "string") {
+        parseInput = JSON.parse(data);
+      } else parseInput = data;
+
+      const { pUid } = parseInput;
+      parsepUid = pUid;
+
+      /* User Plan DB 처리 */
+      // 1. SELECT (User가 있는지 없는지 검사)
+      const plan_table = Plan_Table_Info["Plan"].table;
+      const plan_attribute = Plan_Table_Info["Plan"].attribute;
+
+      const plan_select_query = `SELECT ${plan_attribute.attr1} FROM ${plan_table} WHERE ${plan_attribute.pKey}='${parsepUid}'`;
+      const plan_select_data = await fetchUserData(
+        connection_AI,
+        plan_select_query
+      );
+
+      // console.log(plan_select_data[0].expirationDate);
+      return res
+        .status(200)
+        .json({ expirationDate: plan_select_data[0].expirationDate });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Server Error - 500" + err.message });
+    }
+  },
 };
 
 module.exports = {

@@ -4,10 +4,12 @@ const router = express.Router();
 const { errController } = require("../controller/index");
 const { kakaoPayController } = require("../controller/kakaoPay");
 
-const { postKakaoPayReady, postKakaoPayApprove } = kakaoPayController;
+const { postKakaoPayReady, postKakaoPayApprove, postUserExpiration } =
+  kakaoPayController;
 
 router.post("/ready", postKakaoPayReady);
 router.post("/approve", postKakaoPayApprove);
+router.post("/expiration", postUserExpiration);
 
 // 에러 메세지 처리
 router.use(errController.errMessageHandler);
