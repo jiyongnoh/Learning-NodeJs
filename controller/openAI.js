@@ -998,7 +998,7 @@ const openAIController = {
         promptArr.push(EBT_Table_Info[type].consult);
       }
       // 대화 6회 - 심리 상담 프롬프트 + 심리 상태 분석 프롬프트 삽입
-      else if ((parseMessageArr.length + 1) % 12 === 0) {
+      else if (parseMessageArr.length === 11) {
         console.log("심리 상담 프롬프트 + 심리 요약 프롬프트 삽입");
         promptArr.push(EBT_Table_Info[type].consult);
         // 비교 분석용 EBT class 맵
