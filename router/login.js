@@ -15,6 +15,7 @@ const {
   tokenLogoutHandler,
   // OAuth
   oauthUrlHandler,
+  oauthKakaoUrlHandler,
   oauthGoogleAccessTokenHandler,
   oauthKakaoAccessTokenHandler,
   // AI 일반 로그인
@@ -67,7 +68,9 @@ router.get("/ai/logout", getAILogoutHandler);
 // AI RefreshToken 갱신
 router.post("/ai/updatetoken", postAIRefreshTokenUpdateHandler);
 // OAuth_url 발급
-router.post("/oauth_url", oauthUrlHandler);
+router.get("/oauth_url", oauthUrlHandler);
+// Kakao OAuth_url 발급
+router.get("/oauth_url/kakao", oauthKakaoUrlHandler);
 // Google OAuth AccessToken 발급
 router.post("/oauth_token/google", oauthGoogleAccessTokenHandler);
 // Kakao OAuth AccessToken 발급
