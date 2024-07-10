@@ -517,7 +517,6 @@ const loginController = {
           console.log(`[${parseUid}] SessionID Update - ${sessionId}`);
         });
       });
-
       // 클라이언트에 사용자 정보 응답
       res.json({ data: response.data });
     } catch (err) {

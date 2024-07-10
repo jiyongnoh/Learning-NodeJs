@@ -89,7 +89,6 @@ app.use(compression());
 
 app.get("/", (req, res) => {
   res.status(200).json({ text: "Hello World!" });
-  res.end();
 });
 
 // Tips, AI 공통
