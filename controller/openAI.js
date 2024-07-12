@@ -1365,6 +1365,114 @@ const openAIController = {
       });
     }
   },
+  // 훈련 트레이너 - 엘라 (New)
+  postOpenAITraningElla: async (req, res) => {
+    const { data } = req.body;
+    console.log(data);
+    let parseData, parseMessageArr, parsepUid; // Parsing 변수
+    let promptArr = []; // 삽입 Prompt Array
+
+    try {
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { messageArr, pUid, code, gpt_input } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.json({ message: "No pUid input value - 400" });
+      }
+      // No type => return
+      if (!code) {
+        console.log("No code input value - 400");
+        return res.json({ message: "No type input value - 400" });
+      }
+      // No type => return
+      if (!messageArr) {
+        console.log("No messageArr input value - 400");
+        return res.json({ message: "No messageArr input value - 400" });
+      }
+
+      parseMessageArr = [];
+
+      // pUid default값 설정
+      parsepUid = pUid;
+      console.log(`엘라 훈련 API 호출 - pUid: ${parsepUid}`);
+
+      // code 매칭 프롬프트 삽입
+      switch (code) {
+        case "emotion":
+          promptArr.push({
+            role: "system",
+            content: `유저가 마지막으로 한 말에 공감한다.`,
+          });
+          break;
+        case "situation":
+          promptArr.push({
+            role: "system",
+            content: `${gpt_input?.mood_situation}을 바꿀 수 있는 방법을 ‘~할 때 ~를 만난다고 했어.
+            이 상황을 바꿀 방법이 있을까?라는 질문으로 생각해보게 한다`,
+          });
+          break;
+        case "solution":
+          promptArr.push({
+            role: "system",
+            content: `user가 잘 말하면 격려해준다. 
+            그리고 ‘~해보면 어떨까?’라는 말로 user가 말하지 않은 해결 방법을 하나 말해준다. 
+            초등학교 6학년이 할 수 있는 방법이어야 한다`,
+          });
+          break;
+        case "thought":
+          promptArr.push({
+            role: "system",
+            content: `${gpt_input?.mood_thought}에 기초해서 ‘~해서 힘들다고 했어. 
+            그건 정말 그래. 그런데 다르게도 생각해볼 수 있을까?’라는 말로 다른 관점을 생각해보도록 한다.`,
+          });
+          break;
+        case "another":
+          promptArr.push({
+            role: "system",
+            content: `User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다.`,
+          });
+          break;
+        case "listing":
+          promptArr.push({
+            role: "system",
+            content: `
+            '''
+            ${gpt_input?.mood_list[0]}
+            ${gpt_input?.mood_list[1]}
+            ${gpt_input?.mood_list[2]}
+            '''
+            위 문장들을 보기좋게 다듬어서 목록 형식으로 나열한다`,
+          });
+          break;
+      }
+
+      const response = await openai.chat.completions.create({
+        messages: [...promptArr, ...parseMessageArr],
+        model: "gpt-4o", // gpt-4-turbo, gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
+      });
+
+      // let emotion = parseInt(response.choices[0].message.content.slice(-1));
+      // console.log("emotion: " + emotion);
+
+      const message = {
+        message: response.choices[0].message.content,
+        emotion: 0,
+      };
+
+      return res.status(200).json(message);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Server Error - 500 Bad Gateway" + err.message,
+        emotion: 0,
+      });
+    }
+  },
   // 정서멘토 모델 - 엘라
   postOpenAIConsultingLala: async (req, res) => {
     const { EBTData } = req.body;

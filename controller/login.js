@@ -372,7 +372,7 @@ const loginController = {
             );
           });
 
-          res.json({ data: response.data });
+          res.json(response.data);
         });
       });
     } catch (err) {
@@ -518,7 +518,7 @@ const loginController = {
         });
       });
       // 클라이언트에 사용자 정보 응답
-      res.json({ data: response.data });
+      res.json(response.data);
     } catch (err) {
       console.error(err.message);
       res.status(500).json({ data: "Server Error!" });

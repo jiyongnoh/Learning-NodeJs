@@ -15,6 +15,7 @@ const {
   postOpenAIPsychologicalAnalysis,
   postOpenAIConsultingPupu,
   postOpenAIConsultingUbi,
+  postOpenAITraningElla,
   postOpenAIConsultingLala,
   postOpenAIConsultingSoyes,
   postOpenAIMypageCalendarData,
@@ -51,12 +52,15 @@ router.post(
 );
 // 공부친구 모델 - 우비
 router.post("/consulting_emotion_ubi", postOpenAIConsultingUbi);
-// 정서멘토 모델 - 라라
+// 정서멘토 모델 - 엘라
 router.post("/consulting_emotion_lala", postOpenAIConsultingLala);
 // 전문상담사 모델 - 소예
 router.post("/consulting_emotion_soyes", postOpenAIConsultingSoyes);
 // 상담 내역 저장
 router.post("/consulting_emotion_log", postOpenAIConsultingLogSave);
+
+// 기분훈련 모델 - 엘라
+router.post("/training_mood_ella", postOpenAITraningElla);
 
 // 달력 데이터 반환
 router.post("/calendar", postOpenAIMypageCalendarData);
