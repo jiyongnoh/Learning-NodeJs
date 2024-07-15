@@ -1368,8 +1368,10 @@ const openAIController = {
   // 훈련 트레이너 - 엘라 (New)
   postOpenAITraningElla: async (req, res) => {
     const { data } = req.body;
-    // console.log(data);
-    let parseData, parseMessageArr, parsepUid; // Parsing 변수
+    console.log(data);
+    let parseData,
+      parseMessageArr = [],
+      parsepUid; // Parsing 변수
     let promptArr = []; // 삽입 Prompt Array
 
     try {
@@ -1383,7 +1385,8 @@ const openAIController = {
         code,
         mood_situation,
         mood_thought,
-        mood_list,
+        mood_todo_list,
+        mood_talk_list,
       } = parseData;
 
       // No pUid => return
@@ -1402,7 +1405,6 @@ const openAIController = {
         return res.json({ message: "No messageArr input value - 400" });
       }
 
-      parseMessageArr = [...messageArr];
       // pUid default값 설정
       parsepUid = pUid;
       console.log(`엘라 훈련 API 호출 - pUid: ${parsepUid}`);
@@ -1416,6 +1418,7 @@ const openAIController = {
             role: "system",
             content: `유저가 마지막으로 한 말에 공감하되, 절대 질문으로 문장을 끝내지 않는다.`,
           });
+          parseMessageArr = [...messageArr];
           break;
         case "situation":
           promptArr.push({
@@ -1427,6 +1430,7 @@ const openAIController = {
             예시: '~할 때 ~를 만난다고 했어. 이 상황을 바꿀 방법이 있을까?'
             `,
           });
+          parseMessageArr = [...messageArr];
           break;
         case "solution":
           promptArr.push({
@@ -1435,6 +1439,7 @@ const openAIController = {
             예시: '~해보면 어떨까?'
             `,
           });
+          parseMessageArr = [...messageArr];
           break;
         case "thought":
           promptArr.push({
@@ -1445,23 +1450,39 @@ const openAIController = {
             '''
             예시: '그건 정말 그래. 그런데 다르게도 생각해볼 수 있을까?'`,
           });
+          parseMessageArr = [...messageArr];
           break;
         case "another":
           promptArr.push({
             role: "system",
             content: `생성된 Text는 질문으로 끝나서는 안된다. User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다.`,
           });
+          parseMessageArr = [...messageArr];
           break;
         case "listing":
           promptArr.push({
             role: "system",
-            content: `아래 문장들을 유저가 작성한 Todo List이다. 
+            content: `아래 3개의 문장은 유저가 작성한 Todo List이다. 
 보기좋게 다듬어서 목록 형식으로 나열한다. 
 Todo List가 아니라고 판단되면 제외한다.
 '''
-1. ${mood_list[0]}
-2. ${mood_list[1]}
-3. ${mood_list[2]}
+1. ${mood_todo_list[0]}
+2. ${mood_todo_list[1]}
+3. ${mood_todo_list[2]}
+'''
+반드시 목록 형식으로 작성되어야 한다.`,
+          });
+
+          break;
+        case "talking":
+          promptArr.push({
+            role: "system",
+            content: `아래 3개의 문장은 유저가 mood_name에게 하고싶은 말이다.
+보기좋게 다듬어서 목록 형식으로 나열한다.
+'''
+1. ${mood_talk_list[0]}
+2. ${mood_talk_list[1]}
+3. ${mood_talk_list[2]}
 '''
 반드시 목록 형식으로 작성되어야 한다.`,
           });
