@@ -1301,7 +1301,7 @@ const openAIController = {
 
         const response = await openai.chat.completions.create({
           messages: [...promptArr, ...parseMessageArr],
-          model: "gpt-4-0125-preview", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
+          model: "gpt-4o", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
         });
 
         res.json({
@@ -1431,8 +1431,7 @@ const openAIController = {
         case "solution":
           promptArr.push({
             role: "system",
-            content: `user가 잘 말하면 격려해준다. 
-            user가 말하지 않은 해결 방법을 하나 말해준다. 초등학교 6학년이 할 수 있는 방법이어야 한다
+            content: `user가 잘 말하면 격려해준다. user가 말하지 않은 해결 방법을 하나 말해준다. 초등학교 6학년이 할 수 있는 방법이어야 한다.
             예시: '~해보면 어떨까?'
             `,
           });
@@ -1450,20 +1449,21 @@ const openAIController = {
         case "another":
           promptArr.push({
             role: "system",
-            content: `User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다. 
-            절대 질문으로 끝내선 안된다.`,
+            content: `생성된 Text는 질문으로 끝나서는 안된다. User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다.`,
           });
           break;
         case "listing":
           promptArr.push({
             role: "system",
-            content: `
-            '''
-            ${mood_list[0]}
-            ${mood_list[1]}
-            ${mood_list[2]}
-            '''
-            위 문장들을 보기좋게 다듬어서 목록 형식으로 나열한다`,
+            content: `아래 문장들을 유저가 작성한 Todo List이다. 
+보기좋게 다듬어서 목록 형식으로 나열한다. 
+Todo List가 아니라고 판단되면 제외한다.
+'''
+1. ${mood_list[0]}
+2. ${mood_list[1]}
+3. ${mood_list[2]}
+'''
+반드시 목록 형식으로 작성되어야 한다.`,
           });
           break;
       }
@@ -2500,9 +2500,10 @@ const openAIController = {
     try {
       const { name, mimeType, data, pUid } = req.body;
       console.log(`Google Drive 파일 업로드 API 호출 - Uid:${pUid}`);
+      const [type, imageBase64] = data.split(",");
 
       const bufferStream = new stream.PassThrough();
-      bufferStream.end(Buffer.from(data, "base64"));
+      bufferStream.end(Buffer.from(imageBase64, "base64"));
 
       const fileMetadata = {
         name,
@@ -2559,6 +2560,41 @@ const openAIController = {
     } catch (error) {
       console.log(error);
       res.status(500).send(error.message);
+    }
+  },
+  // 이미지 인식 API
+  postOpenAIAnalysisImg: async (req, res) => {
+    try {
+      const { name, mimeType, data, pUid } = req.body;
+      // data:
+      const [type, imageBase64] = data.split(",");
+
+      // 이미지를 OpenAI API로 전송하여 인식 및 텍스트 생성
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "해당 이미지의 유저의 표정을 분석해줘. 유저가 보이지 않는다면 이미지를 설명해줘.",
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `${type},${imageBase64}`,
+                },
+              },
+            ],
+          },
+        ],
+      });
+
+      res.json({ message: response.choices[0].message.content });
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Failed to process the image" });
     }
   },
 };

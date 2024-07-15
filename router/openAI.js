@@ -27,6 +27,7 @@ const {
   getYoutubeContent,
   postOpenAIConsultSolutionData,
   postOpenAIGoogleDriveUpload,
+  postOpenAIAnalysisImg,
 } = openAIController;
 
 // 토큰 유효성 검사 미들웨어
@@ -77,6 +78,8 @@ router.get("/youtube/:id", getYoutubeContent);
 router.get("/clear_cookies", getClearCookies);
 // 이미지 업로드 (Google Drive)
 router.post("/upload", postOpenAIGoogleDriveUpload);
+// AI 이미지 분석
+router.post("/analysis_img", postOpenAIAnalysisImg);
 
 // 에러 메세지 처리
 router.use(errController.errMessageHandler);
