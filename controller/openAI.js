@@ -1498,7 +1498,6 @@ Todo List가 아니라고 판단되면 제외한다.
 
       const message = {
         message: response.choices[0].message.content,
-        emotion: 0,
       };
 
       return res.status(200).json(message);
@@ -2616,6 +2615,140 @@ Todo List가 아니라고 판단되면 제외한다.
     } catch (error) {
       console.error("Error:", error);
       res.status(500).json({ error: "Failed to process the image" });
+    }
+  },
+  // 기분 훈련 저장 API
+  postOpenAIMoodDataSave: async (req, res) => {
+    const { data } = req.body;
+    console.log(data);
+    let parseData, parsepUid, parseDate; // Parsing 변수
+
+    try {
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const {
+        pUid,
+        type,
+        mood_name,
+        mood_cognitive_score,
+        mood_todo_list,
+        mood_talk_list,
+      } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+
+      // No type => return
+      if (!type) {
+        console.log("No type input value - 400");
+        return res.status(400).json({ message: "No type input value - 400" });
+      }
+
+      // pUid default값 설정
+      parsepUid = pUid;
+
+      console.log(
+        `기분 훈련 저장 API /openAI/calendar Path 호출 - pUid: ${parsepUid}`
+      );
+
+      // TODO - type에 따라 Mood Table 훈련 Data 저장하기
+      if (false) {
+        const table = Consult_Table_Info["Analysis"].table;
+        const attribute = Consult_Table_Info["Analysis"].attribute;
+
+        let query = "",
+          value = "";
+
+        // 타입별 query, value 삽입
+        switch (type) {
+          case "first":
+            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
+            value = [parsepUid, JSON.stringify(message)];
+            break;
+          case "second":
+            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
+            value = [parsepUid, JSON.stringify(message)];
+            break;
+          case "third":
+            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
+            value = [parsepUid, JSON.stringify(message)];
+            break;
+          case "fourth":
+            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
+            value = [parsepUid, JSON.stringify(message)];
+            break;
+        }
+
+        connection_AI.query(query, value, (error, rows, fields) => {
+          if (error) console.log(error.sqlMessage);
+          else {
+            console.log("기분 훈련 Data 저장 성공!");
+            return res.json({ message: "기분 훈련 Data 저장 성공!" });
+          }
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      res.json({
+        message: "Server Error",
+      });
+    }
+  },
+  // 기분 훈련 데이터 Load API
+  postOpenAIMoodDataLoad: async (req, res) => {
+    const { data } = req.body;
+    console.log(data);
+    let parseData, parsepUid; // Parsing 변수
+
+    try {
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { pUid } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+
+      // pUid default값 설정
+      parsepUid = pUid;
+
+      console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
+
+      // TODO - Mood Table User 조회 후 mood_round_idx, mood_name 값 Load
+      if (false) {
+        const table = EBT_Table_Info["Log"].table;
+        const attribute = EBT_Table_Info["Log"].attribute;
+
+        const query = `SELECT ${table}.${attribute.attr2}, ${table}.${attribute.attr3} FROM ${table} WHERE uid = '${parsepUid}';`;
+        const data = await fetchUserData(connection_AI, query);
+        // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
+        if (!data || data[0].mood_round_idx === 4)
+          return res.json({ mood_round_idx: 0, mood_name: "" });
+        // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
+        else
+          return res.json({
+            mood_round_idx: data.mood_round_idx,
+            mood_name: data.mood_name,
+          });
+      }
+
+      res.json({ mood_round_idx: 2, mood_name: "까망이" }); // dummy data (임시)
+    } catch (err) {
+      console.error(err);
+      res.json({
+        message: "Server Error",
+      });
     }
   },
 };
