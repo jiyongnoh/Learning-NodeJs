@@ -212,6 +212,15 @@ const {
   balance_prompt,
 } = require("../DB/solution_prompt");
 
+// Database Table Info
+const {
+  User_Table_Info,
+  EBT_Table_Info,
+  PT_Table_Info,
+  Consult_Table_Info,
+  Ella_Training_Table_Info,
+} = require("../DB/database_table_info");
+
 // User 정서행동 2점문항 반환 (String)
 const select_soyes_AI_Ebt_Table = async (
   user_table,
@@ -358,14 +367,6 @@ const select_soyes_AI_Pt_Table = async (user_table, user_attr, parsepUid) => {
     return "default";
   }
 };
-
-// Database Table Info
-const {
-  User_Table_Info,
-  EBT_Table_Info,
-  PT_Table_Info,
-  Consult_Table_Info,
-} = require("../DB/database_table_info");
 
 // EBT 반영 Class 정의
 const EBT_classArr = [
@@ -2625,7 +2626,7 @@ Todo List가 아니라고 판단되면 제외한다.
   postOpenAIMoodDataSave: async (req, res) => {
     const { data } = req.body;
     console.log(data);
-    let parseData, parsepUid, parseDate; // Parsing 변수
+    let parseData, parsepUid; // Parsing 변수
 
     try {
       // json 파싱
@@ -2661,42 +2662,93 @@ Todo List가 아니라고 판단되면 제외한다.
         `기분 훈련 저장 API /openAI/calendar Path 호출 - pUid: ${parsepUid}`
       );
 
+      const table = Ella_Training_Table_Info["Mood"].table;
+      const attribute = Ella_Training_Table_Info["Mood"].attribute;
+
+      let update_query, update_value;
+
+      // 1. SELECT User Mood Table Data
+      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+      const select_data = await fetchUserData(connection_AI, select_query);
+
+      // console.log(select_data[0]);
+
       // TODO - Mood Table INSERT || UPDATE
-      if (false) {
-        const table = Consult_Table_Info["Analysis"].table;
-        const attribute = Consult_Table_Info["Analysis"].attribute;
 
-        let query = "",
-          value = "";
-
-        // 타입별 query, value 삽입
-        switch (type) {
-          case "first":
-            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
-            value = [parsepUid, JSON.stringify(message)];
-            break;
-          case "second":
-            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
-            value = [parsepUid, JSON.stringify(message)];
-            break;
-          case "third":
-            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
-            value = [parsepUid, JSON.stringify(message)];
-            break;
-          case "fourth":
-            query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE ${attribute.attr1} = VALUES(${attribute.attr1});`;
-            value = [parsepUid, JSON.stringify(message)];
-            break;
-        }
-
-        connection_AI.query(query, value, (error, rows, fields) => {
-          if (error) console.log(error.sqlMessage);
-          else {
-            console.log("기분 훈련 Data 저장 성공!");
-            return res.json({ message: "기분 훈련 Data 저장 성공!" });
-          }
-        });
+      // 타입별 query, value 삽입
+      switch (type) {
+        case "first":
+          const insert_query = `INSERT INTO ${table} (${attribute.fKey}, ${attribute.attr1}, ${attribute.attr2}, ${attribute.attr3}, ${attribute.attr6}) VALUES (?, ?, ?, ?, ?);`;
+          console.log(insert_query);
+          const insert_value = [
+            parsepUid,
+            1,
+            mood_name,
+            mood_cognitive_score,
+            "Ella",
+          ];
+          console.log(insert_value);
+          connection_AI.query(
+            insert_query,
+            insert_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood First Insert Success!");
+            }
+          );
+          break;
+        case "second":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr4} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [
+            2,
+            JSON.stringify(mood_todo_list),
+            select_data[0].mood_idx,
+          ];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Second Update Success!");
+            }
+          );
+          break;
+        case "third":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr5} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [
+            3,
+            JSON.stringify(mood_talk_list),
+            select_data[0].mood_idx,
+          ];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Third Update Success!");
+            }
+          );
+          break;
+        case "fourth":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [4, select_data[0].mood_idx];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Fourth Update Success!");
+            }
+          );
+          break;
       }
+      return res.json({ message: "Mood Data Save Success!" });
     } catch (err) {
       console.error(err);
       res.json({
@@ -2730,25 +2782,25 @@ Todo List가 아니라고 판단되면 제외한다.
       console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
 
       // TODO - Mood Table Select
-      if (false) {
-        // Mood Table 명시
-        const table = EBT_Table_Info["Log"].table;
-        const attribute = EBT_Table_Info["Log"].attribute;
-        // Mood Table User 조회
-        const query = `SELECT ${table}.${attribute.attr2}, ${table}.${attribute.attr3} FROM ${table} WHERE uid = '${parsepUid}';`;
-        const data = await fetchUserData(connection_AI, query);
-        // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
-        if (!data || data[0].mood_round_idx === 4)
-          return res.json({ mood_round_idx: 0, mood_name: "" });
-        // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
-        else
-          return res.json({
-            mood_round_idx: data.mood_round_idx,
-            mood_name: data.mood_name,
-          });
+
+      // Mood Table 명시
+      const table = Ella_Training_Table_Info["Mood"].table;
+      const attribute = Ella_Training_Table_Info["Mood"].attribute;
+      // Mood Table User 조회
+      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+      const select_data = await fetchUserData(connection_AI, select_query);
+      // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
+      if (!select_data[0] || select_data[0].mood_round_idx === 4)
+        return res.json({ mood_round_idx: 0, mood_name: "" });
+      // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
+      else {
+        return res.json({
+          mood_round_idx: select_data[0].mood_round_idx,
+          mood_name: select_data[0].mood_name,
+        });
       }
 
-      res.json({ mood_round_idx: 0, mood_name: "" }); // dummy data (임시)
+      // res.json({ mood_round_idx: 0, mood_name: "" }); // dummy data (임시)
     } catch (err) {
       console.error(err);
       res.json({
