@@ -960,12 +960,17 @@ const openAIController = {
         parseEBTdata = JSON.parse(EBTData);
       } else parseEBTdata = EBTData;
 
-      const { messageArr, pUid } = parseEBTdata;
+      const { messageArr, pUid, type } = parseEBTdata;
 
       // No pUid => return
       if (!pUid) {
         console.log("No pUid input value - 400");
         return res.json({ message: "No pUid input value - 400" });
+      }
+      // No type => return
+      if (!type) {
+        console.log("No type input value - 400");
+        return res.json({ message: "No type input value - 400" });
       }
       // No messageArr => return
       if (!messageArr) {
@@ -980,7 +985,6 @@ const openAIController = {
 
       // pUid default값 설정
       parsepUid = pUid;
-      const type = "School"; // 임시 타입값 설정 (상담 주제)
       console.log(
         `푸푸 상담 API /consulting_emotion_pupu Path 호출 - pUid: ${parsepUid}`
       );
@@ -1076,7 +1080,7 @@ const openAIController = {
       //   // response.choices[0].message.content,
       // ]);
 
-      // 엘라 심리 분석 DB 저장
+      // 심리 분석 DB 저장
       if (parseMessageArr.length === 11) {
         const table = Consult_Table_Info["Analysis"].table;
         const attribute = Consult_Table_Info["Analysis"].attribute;
@@ -2657,7 +2661,7 @@ Todo List가 아니라고 판단되면 제외한다.
         `기분 훈련 저장 API /openAI/calendar Path 호출 - pUid: ${parsepUid}`
       );
 
-      // TODO - type에 따라 Mood Table 훈련 Data 저장하기
+      // TODO - Mood Table INSERT || UPDATE
       if (false) {
         const table = Consult_Table_Info["Analysis"].table;
         const attribute = Consult_Table_Info["Analysis"].attribute;
@@ -2703,7 +2707,7 @@ Todo List가 아니라고 판단되면 제외한다.
   // 기분 훈련 데이터 Load API
   postOpenAIMoodDataLoad: async (req, res) => {
     const { data } = req.body;
-    console.log(data);
+    // console.log(data);
     let parseData, parsepUid; // Parsing 변수
 
     try {
@@ -2725,11 +2729,12 @@ Todo List가 아니라고 판단되면 제외한다.
 
       console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
 
-      // TODO - Mood Table User 조회 후 mood_round_idx, mood_name 값 Load
+      // TODO - Mood Table Select
       if (false) {
+        // Mood Table 명시
         const table = EBT_Table_Info["Log"].table;
         const attribute = EBT_Table_Info["Log"].attribute;
-
+        // Mood Table User 조회
         const query = `SELECT ${table}.${attribute.attr2}, ${table}.${attribute.attr3} FROM ${table} WHERE uid = '${parsepUid}';`;
         const data = await fetchUserData(connection_AI, query);
         // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
@@ -2743,7 +2748,7 @@ Todo List가 아니라고 판단되면 제외한다.
           });
       }
 
-      res.json({ mood_round_idx: 2, mood_name: "까망이" }); // dummy data (임시)
+      res.json({ mood_round_idx: 0, mood_name: "" }); // dummy data (임시)
     } catch (err) {
       console.error(err);
       res.json({
