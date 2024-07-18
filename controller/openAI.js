@@ -181,6 +181,7 @@ const {
   ebt_analysis_prompt_v4,
   ebt_analysis_prompt_v5,
   ebt_analysis_prompt_v6,
+  ebt_analysis_prompt_v7,
   pt_analysis_prompt,
   test_prompt_20240402,
   persona_prompt_lala_v2,
@@ -424,6 +425,7 @@ const openAIController = {
   // EBT 결과 분석 및 DB 저장 및 메일 전송 API
   postOpenAIPsychologicalAnalysis: async (req, res) => {
     const { EBTData } = req.body; // 클라이언트 한계로 데이터 묶음으로 받기.
+    // console.log(EBTData);
 
     let parseEBTdata,
       parseMessageArr,
@@ -456,7 +458,6 @@ const openAIController = {
       if (typeof EBTData === "string") {
         parseEBTdata = JSON.parse(EBTData);
       } else parseEBTdata = EBTData;
-      // console.log(parseEBTdata);
 
       const { messageArr, type, score, pUid } = parseEBTdata;
 
@@ -519,8 +520,8 @@ const openAIController = {
       const analysisPrompt = [];
       const userPrompt = [];
 
-      // 정서행동 검사 분석가 페르소나 v6 - 0507
-      analysisPrompt.push(ebt_analysis_prompt_v6);
+      // 정서행동 검사 분석가 페르소나 v7 - 0718
+      analysisPrompt.push(ebt_analysis_prompt_v7);
       // 분야별 결과 해석 프롬프트
       analysisPrompt.push(ebt_Analysis[parsingType]);
       // 결과 해석 요청 프롬프트
