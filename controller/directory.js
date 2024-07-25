@@ -1,3 +1,4 @@
+const stream = require("stream");
 // MySQL 접근
 const mysql = require("mysql");
 const { dbconfig_ai } = require("../DB/database");
@@ -7,6 +8,24 @@ const connection_AI = mysql.createConnection(dbconfig_ai);
 connection_AI.connect();
 
 const { Review_Table_Info } = require("../DB/database_table_info");
+
+// 구글 권한 관련
+const { google } = require("googleapis");
+
+// GCP IAM 서비스 계정 인증
+const serviceAccount = {
+  private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  client_email: process.env.GOOGLE_CLIENT_EMAIL,
+  project_id: process.env.GOOGLE_PROJECT_ID,
+};
+
+const auth_google_drive = new google.auth.JWT({
+  email: serviceAccount.client_email,
+  key: serviceAccount.private_key,
+  scopes: ["https://www.googleapis.com/auth/drive"],
+});
+
+const drive = google.drive({ version: "v3", auth: auth_google_drive });
 
 // 동기식 DB 접근 함수 1. Promise 생성 함수
 function queryAsync(connection, query, parameters) {
@@ -50,46 +69,83 @@ const directoryController = {
     }
   },
   // Directory CREATE
-  postDirectoryDataCreate: (req, res) => {
-    console.log("ReviewData CREATE API 호출");
-    const { ReviewData } = req.body;
-    let parseReviewData, parsepUid;
+  postDirectoryDataCreate: async (req, res) => {
+    console.log(`Directory CREATE (Google Drive 음원 파일 업로드 API 호출)`);
+    let parseData;
     try {
-      // 파싱. Client JSON 데이터
-      if (typeof ReviewData === "string") {
-        parseReviewData = JSON.parse(ReviewData);
-      } else parseReviewData = ReviewData;
+      const { data } = req.body;
 
-      const { pUid, profile_img_url, content } = parseReviewData;
-      parsepUid = pUid;
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
 
-      const review_table = Review_Table_Info.table;
-      const review_attribute = Review_Table_Info.attribute;
+      const { trackName, mimeType, trackData, directoryId } = parseData;
 
-      // Consult_Log DB 저장
-      const review_insert_query = `INSERT INTO ${review_table} (${Object.values(
-        review_attribute
-      ).join(", ")}) VALUES (${Object.values(review_attribute)
-        .map((el) => "?")
-        .join(", ")})`;
-      // console.log(consult_insert_query);
+      const [type, audioBase64] = trackData.split(",");
 
-      const review_insert_value = [parsepUid, profile_img_url, content];
-      // console.log(consult_insert_value);
+      const bufferStream = new stream.PassThrough();
+      bufferStream.end(Buffer.from(audioBase64, "base64"));
 
-      connection_AI.query(review_insert_query, review_insert_value, (err) => {
-        if (err) {
-          console.log("Review_Log DB Save Fail!");
-          console.log("Err sqlMessage: " + err.sqlMessage);
-          res.json({ message: "Err sqlMessage: " + err.sqlMessage });
-        } else {
-          console.log("Review_Log DB Save Success!");
-          res.status(200).json({ message: "Review_Log DB Save Success!" });
-        }
+      const fileMetadata = {
+        name: trackName,
+      };
+
+      const media = {
+        mimeType,
+        body: bufferStream,
+      };
+
+      // 파일 업로드
+      const file = await drive.files.create({
+        resource: fileMetadata,
+        media: media,
+        fields: "id, webViewLink, webContentLink",
       });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({ message: "Server Error - 500" });
+
+      // 파일을 Public으로 설정
+      await drive.permissions.create({
+        fileId: file.data.id,
+        requestBody: {
+          role: "reader",
+          type: "anyone",
+        },
+      });
+
+      const fileUrl = `https://drive.google.com/uc?export=view&id=${file.data.id}`;
+
+      connection_AI.query(
+        "INSERT INTO directories (name, parent_id, type) VALUES (?, ?, ?)",
+        [trackName, directoryId, "file"],
+        (error, results) => {
+          if (error) {
+            console.error("Database error:", error);
+            return res.status(500).json({ message: "Database error" });
+          }
+          const fileId = results.insertId;
+
+          connection_AI.query(
+            "INSERT INTO tracks (directory_id, url, title) VALUES (?, ?, ?)",
+            [fileId, fileUrl, trackName],
+            (error) => {
+              if (error) {
+                console.error("Database error:", error);
+                return res.status(500).json({ message: "Database error" });
+              }
+              res.status(200).json({
+                id: fileId,
+                name: trackName,
+                parent_id: directoryId,
+                type: "file",
+                url: fileUrl,
+              });
+            }
+          );
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error.message);
     }
   },
   // Directory UPDATE
