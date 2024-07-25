@@ -104,6 +104,9 @@ app.use("/login", loginRouter);
 // signup 경로 라우팅
 const signupRouter = require("./router/signup");
 app.use("/signup", signupRouter);
+// directory 경로 라우팅
+const directoryRouter = require("./router/directory");
+app.use("/directory", directoryRouter);
 
 // Tips
 // 채팅 웹소켓 서버 라우팅
