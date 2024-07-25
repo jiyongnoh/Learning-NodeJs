@@ -42,7 +42,7 @@ const directoryController = {
         "SELECT * FROM directories"
       );
       const tracks = await fetchUserData(connection_AI, "SELECT * FROM tracks");
-      // console.log({ directories, tracks });
+      // console.log({ directories, tracks }); // 로그
       return res.status(200).json({ directories, tracks });
     } catch (error) {
       console.log(error);
