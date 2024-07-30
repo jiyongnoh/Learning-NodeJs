@@ -12,6 +12,8 @@ const { Review_Table_Info } = require("../DB/database_table_info");
 // 구글 권한 관련
 const { google } = require("googleapis");
 
+// google OAuth2Client 설정
+
 // GCP IAM 서비스 계정 인증
 const serviceAccount = {
   private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
@@ -25,7 +27,74 @@ const auth_google_drive = new google.auth.JWT({
   scopes: ["https://www.googleapis.com/auth/drive"],
 });
 
+// const userToImpersonate = "soyesnjy@gmail.com"; // 드라이브 접근을 허용한 사용자의 이메일
+// const auth_google_drive = new google.auth.JWT(
+//   serviceAccount.client_email,
+//   null,
+//   serviceAccount.private_key,
+//   ["https://www.googleapis.com/auth/drive"],
+//   userToImpersonate // 특정 사용자 대리 설정
+// );
+
 const drive = google.drive({ version: "v3", auth: auth_google_drive });
+
+// google drive 파일 전체 조회 메서드
+async function listFiles() {
+  try {
+    const res = await drive.files.list({
+      pageSize: 10,
+      fields: "nextPageToken, files(id, name)",
+    });
+
+    const files = res.data.files;
+    if (files.length) {
+      console.log("Files:");
+      files.map((file) => {
+        console.log(`${file.name} (${file.id})`);
+      });
+    } else {
+      console.log("No files found.");
+    }
+  } catch (error) {
+    console.error(`An error occurred: ${error}`);
+  }
+}
+// listFiles();
+
+// google drive 파일 전체 삭제 메서드
+async function deleteAllFiles() {
+  try {
+    // 파일 목록 가져오기
+    const res = await drive.files.list({
+      pageSize: 1000, // 한 번에 최대 1000개의 파일 가져오기
+      fields: "files(id, name)",
+    });
+
+    const files = res.data.files;
+    if (files.length === 0) {
+      console.log("No files found.");
+      return;
+    }
+
+    // 파일 삭제
+    for (const file of files) {
+      try {
+        await drive.files.delete({ fileId: file.id });
+        console.log(`Deleted file: ${file.name} (${file.id})`);
+      } catch (error) {
+        console.error(
+          `Failed to delete file: ${file.name} (${file.id})`,
+          error.message
+        );
+      }
+    }
+
+    console.log("All files deleted successfully.");
+  } catch (error) {
+    console.error("An error occurred while deleting files:", error.message);
+  }
+}
+// deleteAllFiles();
 
 // 동기식 DB 접근 함수 1. Promise 생성 함수
 function queryAsync(connection, query, parameters) {
@@ -79,9 +148,9 @@ const directoryController = {
       if (typeof data === "string") {
         parseData = JSON.parse(data);
       } else parseData = data;
+      // console.log(parseData);
 
       const { trackName, mimeType, trackData, directoryId } = parseData;
-
       const [type, audioBase64] = trackData.split(",");
 
       const bufferStream = new stream.PassThrough();
@@ -89,6 +158,7 @@ const directoryController = {
 
       const fileMetadata = {
         name: trackName,
+        // parents: ["1Uh3IItyYkTOW-t4qzT_8zpn2G9bp9nhC"], // 공유 폴더 ID를 입력하세요.
       };
 
       const media = {
@@ -112,15 +182,32 @@ const directoryController = {
         },
       });
 
+      // soyesnjy@gmail.com 계정에게 파일 공유 설정 (writer 권한)
+      await drive.permissions.create({
+        fileId: file.data.id,
+        requestBody: {
+          role: "writer",
+          type: "user",
+          emailAddress: "soyesnjy@gmail.com",
+        },
+        // transferOwnership: true, // role:'owner' 일 경우
+      });
+
       // Public URL을 가져오기 위해 파일 정보를 다시 가져옴
       const updatedFile = await drive.files.get({
         fileId: file.data.id,
         fields: "id, webViewLink, webContentLink",
       });
 
-      // const fileUrl = `https://drive.google.com/uc?export=download&id=${file.data.id}`;
+      // const fileUrl = ` https://lh3.googleusercontent.com/d/${file.data.id}`;
+      // const fileUrl = `https://drive.google.com/uc?export=open&id=${file.data.id}`;
+      // const fileUrl = `https://www.googleapis.com/drive/v3/files/${
+      //   file.data.id
+      // }?alt=media&key=${"941098b7c8c3d6a134add1f2ed8cf060ea23cb4e"}`;
+
       // const fileUrl = updatedFile.data.webViewLink;
-      const fileUrl = updatedFile.data.webContentLink;
+      // const fileUrl = updatedFile.data.webContentLink;
+      const fileUrl = `https://drive.google.com/file/d/${file.data.id}/preview`;
 
       connection_AI.query(
         "INSERT INTO directories (name, parent_id, type) VALUES (?, ?, ?)",

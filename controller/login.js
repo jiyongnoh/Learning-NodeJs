@@ -239,7 +239,6 @@ const loginController = {
   },
   // AI Google OAuth 로그인 - AccessToken 발급
   oauthGoogleAccessTokenHandler: async (req, res) => {
-    console.log(req.body);
     const { code } = req.body;
     console.log("Google OAuth AccessToken 발급 API 호출");
     const sessionId = req.sessionID;

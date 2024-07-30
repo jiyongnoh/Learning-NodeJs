@@ -89,22 +89,41 @@ app.use(compression());
 // app.use(responseBodyLogger);
 
 // Helmet을 사용하여 Content Security Policy(CSP) 설정
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'"],
+//         scriptSrc: ["'self'"],
+//         styleSrc: ["'self'"],
+//         imgSrc: ["'self'", "https://drive.google.com"],
+//         mediaSrc: [
+//           "'self'",
+//           "https://drive.google.com",
+//           "https://drive.usercontent.google.com",
+//         ],
+//         connectSrc: ["'self'"],
+//         frameSrc: ["'self'", "https://drive.google.com"],
+//       },
+//     },
+//   })
+// );
 app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'"],
-        imgSrc: ["'self'", "https://drive.google.com"],
-        mediaSrc: [
-          "'self'",
-          "https://drive.google.com",
-          "https://drive.usercontent.google.com",
-        ],
-        connectSrc: ["'self'"],
-        frameSrc: ["'self'", "https://drive.google.com"],
-      },
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https://drive.google.com"],
+      mediaSrc: [
+        "'self'",
+        "https://drive.google.com",
+        "https://drive.googleusercontent.com",
+      ],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
     },
   })
 );
