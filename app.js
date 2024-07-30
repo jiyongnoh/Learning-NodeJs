@@ -8,6 +8,7 @@ require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const compression = require("compression");
+const helmet = require("helmet");
 // const redisStore = require("./DB/redisClient");
 
 const app = express();
@@ -86,6 +87,27 @@ app.use(compression());
 //   next();
 // };
 // app.use(responseBodyLogger);
+
+// Helmet을 사용하여 Content Security Policy(CSP) 설정
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'"],
+        imgSrc: ["'self'", "https://drive.google.com"],
+        mediaSrc: [
+          "'self'",
+          "https://drive.google.com",
+          "https://drive.usercontent.google.com",
+        ],
+        connectSrc: ["'self'"],
+        frameSrc: ["'self'", "https://drive.google.com"],
+      },
+    },
+  })
+);
 
 app.get("/", (req, res) => {
   res.status(200).json({ text: "Hello World!" });

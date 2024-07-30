@@ -21,6 +21,7 @@
     "express-session": "^1.18.0",
     "google-auth-library": "^9.7.0",
     "googleapis": "^134.0.0",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.1",
     "moment-timezone": "^0.5.45",
     "mysql": "^2.18.1",

@@ -112,7 +112,15 @@ const directoryController = {
         },
       });
 
-      const fileUrl = `https://drive.google.com/uc?export=view&id=${file.data.id}`;
+      // Public URL을 가져오기 위해 파일 정보를 다시 가져옴
+      const updatedFile = await drive.files.get({
+        fileId: file.data.id,
+        fields: "id, webViewLink, webContentLink",
+      });
+
+      // const fileUrl = `https://drive.google.com/uc?export=download&id=${file.data.id}`;
+      // const fileUrl = updatedFile.data.webViewLink;
+      const fileUrl = updatedFile.data.webContentLink;
 
       connection_AI.query(
         "INSERT INTO directories (name, parent_id, type) VALUES (?, ?, ?)",

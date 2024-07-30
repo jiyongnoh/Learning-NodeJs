@@ -191,6 +191,7 @@ const {
   solution_matching_persona_prompt,
   persona_prompt_pupu_v2,
   persona_prompt_pupu_v3,
+  persona_prompt_pupu_v4,
 } = require("../DB/test_prompt");
 
 // 인지행동 검사 관련
@@ -963,7 +964,7 @@ const openAIController = {
         parseEBTdata = JSON.parse(EBTData);
       } else parseEBTdata = EBTData;
 
-      const { messageArr, pUid, type } = parseEBTdata;
+      const { messageArr, pUid } = parseEBTdata;
 
       // No pUid => return
       if (!pUid) {
@@ -971,10 +972,10 @@ const openAIController = {
         return res.json({ message: "No pUid input value - 400" });
       }
       // No type => return
-      if (!type) {
-        console.log("No type input value - 400");
-        return res.json({ message: "No type input value - 400" });
-      }
+      // if (!type) {
+      //   console.log("No type input value - 400");
+      //   return res.json({ message: "No type input value - 400" });
+      // }
       // No messageArr => return
       if (!messageArr) {
         console.log("No messageArr input value - 400");
@@ -993,71 +994,71 @@ const openAIController = {
       );
 
       // 고정 삽입 프롬프트
-      promptArr.push(persona_prompt_pupu_v3); // 푸푸 페르소나 v3
+      promptArr.push(persona_prompt_pupu_v4); // 푸푸 페르소나 v4
       promptArr.push(info_prompt); // 유저관련 정보
 
       // const lastUserContent =
       //   parseMessageArr[parseMessageArr.length - 1].content; // 유저 마지막 멘트
 
-      // 대화 6회 미만 - 심리 상담 프롬프트 삽입
-      if (parseMessageArr.length < 11) {
-        console.log("심리 상담 프롬프트 삽입");
-        promptArr.push(EBT_Table_Info[type].consult);
-      }
-      // 대화 6회 - 심리 상담 프롬프트 + 심리 상태 분석 프롬프트 삽입
-      else if (parseMessageArr.length === 11) {
-        console.log("심리 상담 프롬프트 + 심리 요약 프롬프트 삽입");
-        promptArr.push(EBT_Table_Info[type].consult);
-        // 비교 분석용 EBT class 맵
-        const compareTypeMap = {
-          School: ["School", "Attention"], // 학업/성적 상담은 School, Attention 분석과 비교하여 해석.
-          Friend: ["Friend", "Movement"],
-          Family: ["Family"],
-          Mood: ["Mood", "Unrest", "Sad", "Angry"],
-          Health: ["Health"],
-          Self: ["Self"],
-        };
+      // // 대화 6회 미만 - 심리 상담 프롬프트 삽입
+      // if (parseMessageArr.length < 11) {
+      //   console.log("심리 상담 프롬프트 삽입");
+      //   promptArr.push(EBT_Table_Info[type].consult);
+      // }
+      // // 대화 6회 - 심리 상담 프롬프트 + 심리 상태 분석 프롬프트 삽입
+      // else if (parseMessageArr.length === 11) {
+      //   console.log("심리 상담 프롬프트 + 심리 요약 프롬프트 삽입");
+      //   promptArr.push(EBT_Table_Info[type].consult);
+      //   // 비교 분석용 EBT class 맵
+      //   const compareTypeMap = {
+      //     School: ["School", "Attention"], // 학업/성적 상담은 School, Attention 분석과 비교하여 해석.
+      //     Friend: ["Friend", "Movement"],
+      //     Family: ["Family"],
+      //     Mood: ["Mood", "Unrest", "Sad", "Angry"],
+      //     Health: ["Health"],
+      //     Self: ["Self"],
+      //   };
 
-        let resolvedCompareEbtAnalysis; // EBT 분석을 담을 배열
+      //   let resolvedCompareEbtAnalysis; // EBT 분석을 담을 배열
 
-        // compareTypeMap에 맵핑되는 분야의 검사 결과를 DB에서 조회
-        const compareEbtAnalysis = await compareTypeMap[type].map(
-          async (ebtClass) => {
-            return await select_soyes_AI_Ebt_Analyis(
-              EBT_Table_Info[ebtClass],
-              parsepUid
-            );
-          }
-        );
-        // Promise Pending 대기
-        await Promise.all(compareEbtAnalysis).then((data) => {
-          resolvedCompareEbtAnalysis = [...data]; // resolve 상태로 반환된 prompt 배열을 psy_testResult_promptArr_last 변수에 복사
-        });
-        // userPrompt 명령 추가
-        userPrompt.push({
-          role: "user",
-          content: `아래는 user의 정서행동검사 결과야.
-          '''
-          ${resolvedCompareEbtAnalysis.map((data) => {
-            const { ebtClass, analyisResult } = data;
-            return `
-            ${ebtClass}: { ${
-              analyisResult === "NonTesting"
-                ? `'정서행동검사 - ${analyisResult}'을 실시하지 않았습니다.`
-                : analyisResult
-            }}
-            `;
-          })}
-          '''
-          지금까지 대화를 기반으로 user의 심리 상태를 3문장으로 요약하고, 위 정서행동검사 결과와 비교하여 2문장으로 해석해줘.
-            `,
-        });
-      } else {
-        console.log(
-          `심리 솔루션 프롬프트 삽입 - solution:${req.session.solution?.solutionClass}`
-        );
-        promptArr.push(EBT_Table_Info[type].solution);
-      }
+      //   // compareTypeMap에 맵핑되는 분야의 검사 결과를 DB에서 조회
+      //   const compareEbtAnalysis = await compareTypeMap[type].map(
+      //     async (ebtClass) => {
+      //       return await select_soyes_AI_Ebt_Analyis(
+      //         EBT_Table_Info[ebtClass],
+      //         parsepUid
+      //       );
+      //     }
+      //   );
+      //   // Promise Pending 대기
+      //   await Promise.all(compareEbtAnalysis).then((data) => {
+      //     resolvedCompareEbtAnalysis = [...data]; // resolve 상태로 반환된 prompt 배열을 psy_testResult_promptArr_last 변수에 복사
+      //   });
+      //   // userPrompt 명령 추가
+      //   userPrompt.push({
+      //     role: "user",
+      //     content: `아래는 user의 정서행동검사 결과야.
+      //     '''
+      //     ${resolvedCompareEbtAnalysis.map((data) => {
+      //       const { ebtClass, analyisResult } = data;
+      //       return `
+      //       ${ebtClass}: { ${
+      //         analyisResult === "NonTesting"
+      //           ? `'정서행동검사 - ${analyisResult}'을 실시하지 않았습니다.`
+      //           : analyisResult
+      //       }}
+      //       `;
+      //     })}
+      //     '''
+      //     지금까지 대화를 기반으로 user의 심리 상태를 3문장으로 요약하고, 위 정서행동검사 결과와 비교하여 2문장으로 해석해줘.
+      //       `,
+      //   });
+      // } else {
+      //   console.log(
+      //     `심리 솔루션 프롬프트 삽입 - solution:${req.session.solution?.solutionClass}`
+      //   );
+      //   promptArr.push(EBT_Table_Info[type].solution);
+      // }
 
       // 상시 삽입 프롬프트
       // promptArr.push(completions_emotion_prompt); // 답변 이모션 넘버 확인 프롬프트 삽입
@@ -1084,24 +1085,25 @@ const openAIController = {
       // ]);
 
       // 심리 분석 DB 저장
-      if (parseMessageArr.length === 11) {
-        const table = Consult_Table_Info["Analysis"].table;
-        const attribute = Consult_Table_Info["Analysis"].attribute;
+      // if (parseMessageArr.length === 11) {
+      //   const table = Consult_Table_Info["Analysis"].table;
+      //   const attribute = Consult_Table_Info["Analysis"].attribute;
 
-        // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
-        const duple_query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
-          ${attribute.attr1} = VALUES(${attribute.attr1});`;
+      //   // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
+      //   const duple_query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
+      //     ${attribute.attr1} = VALUES(${attribute.attr1});`;
 
-        const duple_value = [parsepUid, JSON.stringify(message)];
+      //   const duple_value = [parsepUid, JSON.stringify(message)];
 
-        connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
-          if (error) console.log(error);
-          else console.log("Ella Consult Analysis UPDATE Success!");
-        });
+      //   connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
+      //     if (error) console.log(error);
+      //     else console.log("Ella Consult Analysis UPDATE Success!");
+      //   });
 
-        // 엘라 유저 분석 내용 Session 저장
-        req.session.ella_analysis = message.message;
-      }
+      //   // 엘라 유저 분석 내용 Session 저장
+      //   req.session.ella_analysis = message.message;
+      // }
+
       return res.status(200).json(message);
     } catch (err) {
       console.error(err);
