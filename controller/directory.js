@@ -139,105 +139,129 @@ const directoryController = {
   },
   // Directory CREATE
   postDirectoryDataCreate: async (req, res) => {
-    console.log(`Directory CREATE (Google Drive 음원 파일 업로드 API 호출)`);
+    console.log(
+      `Directory CREATE (Google Drive 음원 파일/디렉토리 업로드 API 호출)`
+    );
     let parseData;
     try {
       const { data } = req.body;
-
       // json 파싱
       if (typeof data === "string") {
         parseData = JSON.parse(data);
       } else parseData = data;
       // console.log(parseData);
 
-      const { trackName, mimeType, trackData, directoryId } = parseData;
-      const [type, audioBase64] = trackData.split(",");
+      // file 생성인 경우
+      if (parseData.type === "file") {
+        const { trackName, mimeType, trackData, directoryId } = parseData;
+        const [type, audioBase64] = trackData.split(",");
 
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(Buffer.from(audioBase64, "base64"));
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(Buffer.from(audioBase64, "base64"));
 
-      const fileMetadata = {
-        name: trackName,
-        // parents: ["1Uh3IItyYkTOW-t4qzT_8zpn2G9bp9nhC"], // 공유 폴더 ID를 입력하세요.
-      };
+        const fileMetadata = {
+          name: trackName,
+          // parents: ["1Uh3IItyYkTOW-t4qzT_8zpn2G9bp9nhC"], // 공유 폴더 ID를 입력하세요.
+        };
 
-      const media = {
-        mimeType,
-        body: bufferStream,
-      };
+        const media = {
+          mimeType,
+          body: bufferStream,
+        };
 
-      // 파일 업로드
-      const file = await drive.files.create({
-        resource: fileMetadata,
-        media: media,
-        fields: "id, webViewLink, webContentLink",
-      });
+        // 파일 업로드
+        const file = await drive.files.create({
+          resource: fileMetadata,
+          media: media,
+          fields: "id, webViewLink, webContentLink",
+        });
 
-      // 파일을 Public으로 설정
-      await drive.permissions.create({
-        fileId: file.data.id,
-        requestBody: {
-          role: "reader",
-          type: "anyone",
-        },
-      });
+        // 파일을 Public으로 설정
+        await drive.permissions.create({
+          fileId: file.data.id,
+          requestBody: {
+            role: "reader",
+            type: "anyone",
+          },
+        });
 
-      // soyesnjy@gmail.com 계정에게 파일 공유 설정 (writer 권한)
-      await drive.permissions.create({
-        fileId: file.data.id,
-        requestBody: {
-          role: "writer",
-          type: "user",
-          emailAddress: "soyesnjy@gmail.com",
-        },
-        // transferOwnership: true, // role:'owner' 일 경우
-      });
+        // soyesnjy@gmail.com 계정에게 파일 공유 설정 (writer 권한)
+        await drive.permissions.create({
+          fileId: file.data.id,
+          requestBody: {
+            role: "writer",
+            type: "user",
+            emailAddress: "soyesnjy@gmail.com",
+          },
+          // transferOwnership: true, // role:'owner' 일 경우
+        });
 
-      // Public URL을 가져오기 위해 파일 정보를 다시 가져옴
-      const updatedFile = await drive.files.get({
-        fileId: file.data.id,
-        fields: "id, webViewLink, webContentLink",
-      });
+        // Public URL을 가져오기 위해 파일 정보를 다시 가져옴
+        // const updatedFile = await drive.files.get({
+        //   fileId: file.data.id,
+        //   fields: "id, webViewLink, webContentLink",
+        // });
 
-      // const fileUrl = ` https://lh3.googleusercontent.com/d/${file.data.id}`;
-      // const fileUrl = `https://drive.google.com/uc?export=open&id=${file.data.id}`;
-      // const fileUrl = `https://www.googleapis.com/drive/v3/files/${
-      //   file.data.id
-      // }?alt=media&key=${"941098b7c8c3d6a134add1f2ed8cf060ea23cb4e"}`;
+        // const fileUrl = ` https://lh3.googleusercontent.com/d/${file.data.id}`;
+        // const fileUrl = `https://drive.google.com/uc?export=open&id=${file.data.id}`;
+        // const fileUrl = `https://www.googleapis.com/drive/v3/files/${FILE_ID}?alt=media&key=${API_KEY}`;
+        // const fileUrl = updatedFile.data.webViewLink;
+        // const fileUrl = updatedFile.data.webContentLink;
 
-      // const fileUrl = updatedFile.data.webViewLink;
-      // const fileUrl = updatedFile.data.webContentLink;
-      const fileUrl = `https://drive.google.com/file/d/${file.data.id}/preview`;
+        const fileUrl = `https://drive.google.com/file/d/${file.data.id}/preview`;
 
-      connection_AI.query(
-        "INSERT INTO directories (name, parent_id, type) VALUES (?, ?, ?)",
-        [trackName, directoryId, "file"],
-        (error, results) => {
-          if (error) {
-            console.error("Database error:", error);
-            return res.status(500).json({ message: "Database error" });
-          }
-          const fileId = results.insertId;
-
-          connection_AI.query(
-            "INSERT INTO tracks (directory_id, url, title) VALUES (?, ?, ?)",
-            [fileId, fileUrl, trackName],
-            (error) => {
-              if (error) {
-                console.error("Database error:", error);
-                return res.status(500).json({ message: "Database error" });
-              }
-              res.status(200).json({
-                id: fileId,
-                name: trackName,
-                parent_id: directoryId,
-                type: "file",
-                url: fileUrl,
-              });
+        connection_AI.query(
+          "INSERT INTO directories (name, parent_id, type) VALUES (?, ?, ?)",
+          [trackName, directoryId, "file"],
+          (error, results) => {
+            if (error) {
+              console.error("Database error:", error);
+              return res.status(500).json({ message: "Database error" });
             }
-          );
-        }
-      );
+            const fileId = results.insertId;
+
+            connection_AI.query(
+              "INSERT INTO tracks (directory_id, url, title) VALUES (?, ?, ?)",
+              [fileId, fileUrl, trackName],
+              (error) => {
+                if (error) {
+                  console.error("Database error:", error);
+                  return res.status(500).json({ message: "Database error" });
+                }
+                return res.status(200).json({
+                  id: fileId,
+                  name: trackName,
+                  parent_id: directoryId,
+                  type: "file",
+                  url: fileUrl,
+                });
+              }
+            );
+          }
+        );
+      }
+      // Directory 생성인 경우
+      else if (parseData.type === "directory") {
+        const { directoryName, directoryId, type } = parseData;
+
+        connection_AI.query(
+          "INSERT INTO directories (name, parent_id, type) VALUES (?, ?, ?)",
+          [directoryName, directoryId || null, type],
+          (error, results) => {
+            if (error) {
+              console.error("Database error:", error);
+              return res.status(500).json({ message: "Database error" });
+            }
+            const directoryId = results.insertId;
+            return res.status(200).json({
+              id: directoryId,
+              name: directoryName,
+              parent_id: directoryId,
+              type: "directory",
+            });
+          }
+        );
+      }
     } catch (error) {
       console.log(error);
       res.status(500).send(error.message);
