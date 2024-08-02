@@ -1268,7 +1268,7 @@ const openAIController = {
   postOpenAIConsultingUbi: async (req, res) => {
     const { EBTData } = req.body;
 
-    console.log(EBTData);
+    // console.log(EBTData);
     let parseEBTdata, parseMessageArr, parsepUid; // Parsing 변수
     let promptArr = []; // 삽입 Prompt Array
     // let prevChat_flag = true; // 이전 대화 내역 유무
@@ -1359,12 +1359,12 @@ const openAIController = {
         model: "gpt-4o", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
       });
 
-      let emotion = parseInt(response.choices[0].message.content.slice(-1));
+      // let emotion = parseInt(response.choices[0].message.content.slice(-1));
       // console.log(emotion);
 
       const message = {
-        message: response.choices[0].message.content.slice(0, -1),
-        emotion,
+        message: response.choices[0].message.content,
+        // emotion,
       };
       // console.log([
       //   ...parseMessageArr,
@@ -1375,7 +1375,7 @@ const openAIController = {
       console.error(err);
       res.json({
         message: "Server Error",
-        emotion: 0,
+        // emotion: 0,
       });
     }
   },
