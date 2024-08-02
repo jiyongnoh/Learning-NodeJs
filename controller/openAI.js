@@ -1264,7 +1264,7 @@ const openAIController = {
     //   });
     // }
   },
-  // 공부친구 모델 - 우비
+  // 게임친구 모델 - 우비
   postOpenAIConsultingUbi: async (req, res) => {
     const { EBTData } = req.body;
 
@@ -1278,7 +1278,7 @@ const openAIController = {
         parseEBTdata = JSON.parse(EBTData);
       } else parseEBTdata = EBTData;
 
-      const { messageArr, pUid } = parseEBTdata;
+      const { messageArr, pUid, game } = parseEBTdata;
       // messageArr가 문자열일 경우 json 파싱
       if (typeof messageArr === "string") {
         parseMessageArr = JSON.parse(messageArr);
@@ -1290,6 +1290,11 @@ const openAIController = {
         return res.json({ message: "No pUid input value - 400" });
       }
 
+      if (!game) {
+        console.log("No game input value - 400");
+        return res.json({ message: "No game input value - 400" });
+      }
+
       parsepUid = pUid;
       console.log(
         `우비 상담 API /consulting_emotion_ubi Path 호출 - pUid: ${parsepUid}`
@@ -1298,54 +1303,54 @@ const openAIController = {
       promptArr.push(persona_prompt_ubi); // 페르소나 프롬프트 삽입
       promptArr.push(info_prompt); // 유저 정보 프롬프트 삽입
 
-      const lastUserContent =
-        parseMessageArr[parseMessageArr.length - 1].content; // 유저 마지막 멘트
+      // const lastUserContent =
+      //   parseMessageArr[parseMessageArr.length - 1].content; // 유저 마지막 멘트
 
       // NO REQ 질문 처리. 10초 이상 질문이 없을 경우 Client 측에서 'NO REQUEST' 메시지를 담은 요청을 보냄. 그에 대한 처리
-      if (lastUserContent.includes("NO REQ")) {
-        console.log("NO REQUEST 전달");
+      // if (lastUserContent.includes("NO REQ")) {
+      //   console.log("NO REQUEST 전달");
 
-        parseMessageArr.push(no_req_prompt);
-        promptArr.push(sentence_division_prompt);
+      //   parseMessageArr.push(no_req_prompt);
+      //   promptArr.push(sentence_division_prompt);
 
-        const response = await openai.chat.completions.create({
-          messages: [...promptArr, ...parseMessageArr],
-          model: "gpt-4o", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
-        });
+      //   const response = await openai.chat.completions.create({
+      //     messages: [...promptArr, ...parseMessageArr],
+      //     model: "gpt-4o", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
+      //   });
 
-        res.json({
-          message: response.choices[0].message.content,
-          emotion: 0,
-        });
+      //   res.json({
+      //     message: response.choices[0].message.content,
+      //     emotion: 0,
+      //   });
 
-        return;
-      }
+      //   return;
+      // }
 
       // 유저 성격검사 결과 DB에서 가져오기
-      const pt_result = await select_soyes_AI_Pt_Table(
-        PT_Table_Info["Main"].table,
-        PT_Table_Info["Main"].attribute,
-        parsepUid
-      );
-      // console.log(pt_result);
-      promptArr.push({
-        role: "system",
-        content: `다음 문단은 'user'의 성격검사 결과입니다.
-        '''
-        ${
-          pt_result !== "default"
-            ? `'user'는 성격검사 결과 ${pt_result} 유형에 해당됩니다. ${pt_result} 유형은 ${persnal_short["IFPE"]}`
-            : "user는 성격검사를 진행하지 않았습니다."
-        }
-        '''
-        'assistant'는 'user'의 성격 유형을 알고있습니다. 
-        `,
-      });
+      // const pt_result = await select_soyes_AI_Pt_Table(
+      //   PT_Table_Info["Main"].table,
+      //   PT_Table_Info["Main"].attribute,
+      //   parsepUid
+      // );
+      // // console.log(pt_result);
+      // promptArr.push({
+      //   role: "system",
+      //   content: `다음 문단은 'user'의 성격검사 결과입니다.
+      //   '''
+      //   ${
+      //     pt_result !== "default"
+      //       ? `'user'는 성격검사 결과 ${pt_result} 유형에 해당됩니다. ${pt_result} 유형은 ${persnal_short["IFPE"]}`
+      //       : "user는 성격검사를 진행하지 않았습니다."
+      //   }
+      //   '''
+      //   'assistant'는 'user'의 성격 유형을 알고있습니다.
+      //   `,
+      // });
 
       // 상시 삽입 프롬프트
-      promptArr.push(solution_prompt); // 학습 관련 솔루션 프롬프트
-      promptArr.push(sentence_division_prompt); // 공통 프롬프트 삽입
-      promptArr.push(completions_emotion_prompt); // 답변 이모션 넘버 확인 프롬프트 삽입
+      // promptArr.push(solution_prompt); // 학습 관련 솔루션 프롬프트
+      // promptArr.push(sentence_division_prompt); // 공통 프롬프트 삽입
+      // promptArr.push(completions_emotion_prompt); // 답변 이모션 넘버 확인 프롬프트 삽입
 
       // console.log(promptArr);
 
@@ -1361,10 +1366,10 @@ const openAIController = {
         message: response.choices[0].message.content.slice(0, -1),
         emotion,
       };
-      console.log([
-        ...parseMessageArr,
-        { role: "assistant", content: message.message },
-      ]);
+      // console.log([
+      //   ...parseMessageArr,
+      //   { role: "assistant", content: message.message },
+      // ]);
       res.json(message);
     } catch (err) {
       console.error(err);
@@ -1514,7 +1519,6 @@ Todo List가 아니라고 판단되면 제외한다.
       console.error(err);
       return res.status(500).json({
         message: "Server Error - 500 Bad Gateway" + err.message,
-        emotion: 0,
       });
     }
   },
