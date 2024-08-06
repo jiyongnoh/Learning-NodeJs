@@ -5,6 +5,7 @@ const { errController } = require("../controller/index");
 // const { openAIController } = require("../controller/index");
 const {
   openAIController,
+  ellaMoodController,
   openAIController_Regercy, // 레거시 코드
 } = require("../controller/openAI");
 
@@ -15,7 +16,6 @@ const {
   postOpenAIPsychologicalAnalysis,
   postOpenAIConsultingPupu,
   postOpenAIConsultingUbi,
-  postOpenAITraningElla,
   postOpenAIConsultingLala,
   postOpenAIConsultingSoyes,
   postOpenAIMypageCalendarData,
@@ -28,9 +28,14 @@ const {
   postOpenAIConsultSolutionData,
   postOpenAIGoogleDriveUpload,
   postOpenAIAnalysisImg,
+} = openAIController;
+
+// 엘라 Mood
+const {
+  postOpenAIEllaMoodTraning,
   postOpenAIMoodDataSave,
   postOpenAIMoodDataLoad,
-} = openAIController;
+} = ellaMoodController;
 
 // 토큰 유효성 검사 미들웨어
 const { vaildateTokenConsulting, vaildatePlan } = loginController;
@@ -63,7 +68,7 @@ router.post("/consulting_emotion_soyes", postOpenAIConsultingSoyes);
 router.post("/consulting_emotion_log", postOpenAIConsultingLogSave);
 
 // 기분훈련 모델 - 엘라
-router.post("/training_mood_ella", postOpenAITraningElla);
+router.post("/training_mood_ella", postOpenAIEllaMoodTraning);
 // 기분훈련 데이터 Save
 router.post("/training_mood_ella/save", postOpenAIMoodDataSave);
 // 기분훈련 데이터 Load

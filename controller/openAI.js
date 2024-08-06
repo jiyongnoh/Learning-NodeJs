@@ -2820,7 +2820,337 @@ Todo List가 아니라고 판단되면 제외한다.
   },
 };
 
-// console.log("jenkins 테스트용 주석22");
+const ellaMoodController = {
+  // 훈련 트레이너 - 엘라 (New)
+  postOpenAIEllaMoodTraning: async (req, res) => {
+    const { data } = req.body;
+    console.log(data);
+    let parseData,
+      parseMessageArr = [],
+      parsepUid; // Parsing 변수
+    let promptArr = []; // 삽입 Prompt Array
+
+    try {
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const {
+        messageArr,
+        pUid,
+        code,
+        mood_situation,
+        mood_thought,
+        mood_todo_list,
+        mood_talk_list,
+      } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.json({ message: "No pUid input value - 400" });
+      }
+      // No type => return
+      if (!code) {
+        console.log("No code input value - 400");
+        return res.json({ message: "No type input value - 400" });
+      }
+      // No type => return
+      if (!messageArr) {
+        console.log("No messageArr input value - 400");
+        return res.json({ message: "No messageArr input value - 400" });
+      }
+
+      // pUid default값 설정
+      parsepUid = pUid;
+      console.log(`엘라 훈련 API 호출 - pUid: ${parsepUid}`);
+
+      promptArr.push(persona_prompt_lala_v5); // 엘라 페르소나
+
+      // code 매칭 프롬프트 삽입
+      switch (code) {
+        case "emotion":
+          promptArr.push({
+            role: "system",
+            content: `유저가 마지막으로 한 말에 공감하되, 절대 질문으로 문장을 끝내지 않는다.`,
+          });
+          parseMessageArr = [...messageArr];
+          break;
+        case "situation":
+          promptArr.push({
+            role: "system",
+            content: `아래 문장에 기초하여 유저에게 상황을 바꿀 방법을 생각해보게 한다.
+            '''
+            ${mood_situation}
+            '''
+            예시: '~할 때 ~를 만난다고 했어. 이 상황을 바꿀 방법이 있을까?'
+            `,
+          });
+          parseMessageArr = [...messageArr];
+          break;
+        case "solution":
+          promptArr.push({
+            role: "system",
+            content: `user가 잘 말하면 격려해준다. user가 말하지 않은 해결 방법을 하나 말해준다. 초등학교 6학년이 할 수 있는 방법이어야 한다.
+            예시: '~해보면 어떨까?'
+            `,
+          });
+          parseMessageArr = [...messageArr];
+          break;
+        case "thought":
+          promptArr.push({
+            role: "system",
+            content: `아래 문장에 기초해서 다른 관점을 생각해보도록 한다.
+            '''
+            ${mood_thought}
+            '''
+            예시: '그건 정말 그래. 그런데 다르게도 생각해볼 수 있을까?'`,
+          });
+          parseMessageArr = [...messageArr];
+          break;
+        case "another":
+          promptArr.push({
+            role: "system",
+            content: `생성된 Text는 질문으로 끝나서는 안된다. User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다.`,
+          });
+          parseMessageArr = [...messageArr];
+          break;
+        case "listing":
+          promptArr.push({
+            role: "system",
+            content: `아래 3개의 문장은 유저가 작성한 Todo List이다. 
+보기좋게 다듬어서 목록 형식으로 나열한다. 
+Todo List가 아니라고 판단되면 제외한다.
+'''
+1. ${mood_todo_list[0]}
+2. ${mood_todo_list[1]}
+3. ${mood_todo_list[2]}
+'''
+반드시 목록 형식으로 작성되어야 한다.`,
+          });
+
+          break;
+        case "talking":
+          promptArr.push({
+            role: "system",
+            content: `아래 3개의 문장은 유저가 mood_name에게 하고싶은 말이다.
+보기좋게 다듬어서 목록 형식으로 나열한다.
+'''
+1. ${mood_talk_list[0]}
+2. ${mood_talk_list[1]}
+3. ${mood_talk_list[2]}
+'''
+반드시 목록 형식으로 작성되어야 한다.`,
+          });
+          break;
+      }
+
+      // console.log(promptArr);
+
+      const response = await openai.chat.completions.create({
+        messages: [...promptArr, ...parseMessageArr],
+        model: "gpt-4o", // gpt-4-turbo, gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
+      });
+
+      const message = {
+        message: response.choices[0].message.content,
+      };
+
+      return res.status(200).json(message);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Server Error - 500 Bad Gateway" + err.message,
+      });
+    }
+  },
+  // 기분 훈련 저장 API
+  postOpenAIMoodDataSave: async (req, res) => {
+    const { data } = req.body;
+    console.log(data);
+    let parseData, parsepUid; // Parsing 변수
+
+    try {
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const {
+        pUid,
+        type,
+        mood_name,
+        mood_cognitive_score,
+        mood_todo_list,
+        mood_talk_list,
+      } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+
+      // No type => return
+      if (!type) {
+        console.log("No type input value - 400");
+        return res.status(400).json({ message: "No type input value - 400" });
+      }
+
+      // pUid default값 설정
+      parsepUid = pUid;
+
+      console.log(
+        `기분 훈련 저장 API /openAI/calendar Path 호출 - pUid: ${parsepUid}`
+      );
+
+      const table = Ella_Training_Table_Info["Mood"].table;
+      const attribute = Ella_Training_Table_Info["Mood"].attribute;
+
+      let update_query, update_value;
+
+      // 1. SELECT User Mood Table Data
+      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+      const select_data = await fetchUserData(connection_AI, select_query);
+
+      // console.log(select_data[0]);
+
+      // TODO - Mood Table INSERT || UPDATE
+
+      // 타입별 query, value 삽입
+      switch (type) {
+        case "first":
+          const insert_query = `INSERT INTO ${table} (${attribute.fKey}, ${attribute.attr1}, ${attribute.attr2}, ${attribute.attr3}, ${attribute.attr6}) VALUES (?, ?, ?, ?, ?);`;
+          console.log(insert_query);
+          const insert_value = [
+            parsepUid,
+            1,
+            mood_name,
+            mood_cognitive_score,
+            "Ella",
+          ];
+          console.log(insert_value);
+          connection_AI.query(
+            insert_query,
+            insert_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood First Insert Success!");
+            }
+          );
+          break;
+        case "second":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr4} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [
+            2,
+            JSON.stringify(mood_todo_list),
+            select_data[0].mood_idx,
+          ];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Second Update Success!");
+            }
+          );
+          break;
+        case "third":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr5} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [
+            3,
+            JSON.stringify(mood_talk_list),
+            select_data[0].mood_idx,
+          ];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Third Update Success!");
+            }
+          );
+          break;
+        case "fourth":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [4, select_data[0].mood_idx];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Fourth Update Success!");
+            }
+          );
+          break;
+      }
+      return res.json({ message: "Mood Data Save Success!" });
+    } catch (err) {
+      console.error(err);
+      res.json({
+        message: "Server Error",
+      });
+    }
+  },
+  // 기분 훈련 데이터 Load API
+  postOpenAIMoodDataLoad: async (req, res) => {
+    const { data } = req.body;
+    // console.log(data);
+    let parseData, parsepUid; // Parsing 변수
+
+    try {
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { pUid } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+
+      // pUid default값 설정
+      parsepUid = pUid;
+
+      console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
+
+      // TODO - Mood Table Select
+
+      // Mood Table 명시
+      const table = Ella_Training_Table_Info["Mood"].table;
+      const attribute = Ella_Training_Table_Info["Mood"].attribute;
+      // Mood Table User 조회
+      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+      const select_data = await fetchUserData(connection_AI, select_query);
+      // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
+      if (!select_data[0] || select_data[0].mood_round_idx === 4)
+        return res.json({ mood_round_idx: 0, mood_name: "" });
+      // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
+      else {
+        return res.json({
+          mood_round_idx: select_data[0].mood_round_idx,
+          mood_name: select_data[0].mood_name,
+        });
+      }
+
+      // res.json({ mood_round_idx: 0, mood_name: "" }); // dummy data (임시)
+    } catch (err) {
+      console.error(err);
+      res.json({
+        message: "Server Error",
+      });
+    }
+  },
+};
 
 const openAIController_Regercy = {
   // (Regercy) 자율 상담 AI
@@ -3578,5 +3908,6 @@ const openAIController_Regercy = {
 
 module.exports = {
   openAIController,
+  ellaMoodController,
   openAIController_Regercy,
 };
