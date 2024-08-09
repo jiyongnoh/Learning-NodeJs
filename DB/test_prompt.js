@@ -174,6 +174,7 @@ const adler_prompt = {
   '''
   `,
 };
+
 const gestalt_prompt = {
   role: "system",
   content: `assistant는 다음 문단에 오는 이론을 기반하여 상담을 진행합니다.
@@ -676,8 +677,6 @@ const solution_matching_persona_prompt = {
   '''
   `,
 };
-
-// 주석 처리~
 
 module.exports = {
   persona_prompt_pupu,

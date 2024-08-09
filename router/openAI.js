@@ -6,7 +6,7 @@ const { errController } = require("../controller/index");
 const {
   openAIController,
   ellaMoodController,
-  openAIController_Regercy, // 레거시 코드
+  // openAIController_Regercy, // 레거시 코드
 } = require("../controller/openAI");
 
 const { loginController } = require("../controller/login");
@@ -16,7 +16,7 @@ const {
   postOpenAIPsychologicalAnalysis,
   postOpenAIConsultingPupu,
   postOpenAIConsultingUbi,
-  postOpenAIConsultingLala,
+  // postOpenAIConsultingLala,
   postOpenAIConsultingSoyes,
   postOpenAIMypageCalendarData,
   postClovaVoiceTTS,
@@ -30,7 +30,7 @@ const {
   postOpenAIAnalysisImg,
 } = openAIController;
 
-// 엘라 Mood
+// 엘라 Mood 훈련 Controler
 const {
   postOpenAIEllaMoodTraning,
   postOpenAIMoodDataSave,
@@ -60,8 +60,10 @@ router.post(
 );
 // 공부친구 모델 - 우비
 router.post("/consulting_emotion_ubi", postOpenAIConsultingUbi);
-// 정서멘토 모델 - 엘라
-router.post("/consulting_emotion_lala", postOpenAIConsultingLala);
+
+// (Regercy) 정서멘토 모델 - 엘라
+// router.post("/consulting_emotion_lala", postOpenAIConsultingLala);
+
 // 전문상담사 모델 - 소예
 router.post("/consulting_emotion_soyes", postOpenAIConsultingSoyes);
 // 상담 내역 저장

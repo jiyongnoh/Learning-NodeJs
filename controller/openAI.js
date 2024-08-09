@@ -266,7 +266,7 @@ const select_soyes_AI_Ebt_Table = async (
     return { testResult: "", ebt_school_data: {} };
   }
 };
-// User 정서행동 결과 반환 - ("NonTesting" / "danger" / "etc" / "Error")
+// // TODO# New EBT Table 갱신 후 변경 예정
 const select_soyes_AI_Ebt_Result = async (inputTable, parsepUid) => {
   // 동기식 DB 접근 함수 1. Promise 생성 함수
   try {
@@ -322,7 +322,7 @@ const select_soyes_AI_Ebt_Result = async (inputTable, parsepUid) => {
     return "Error";
   }
 };
-// User 정서행동 결과 분석 반환
+// TODO# User 정서행동 결과 분석 반환. 로직 변경 예정
 const select_soyes_AI_Ebt_Analyis = async (inputTable, parsepUid) => {
   // 동기식 DB 접근 함수 1. Promise 생성 함수
   try {
@@ -507,7 +507,7 @@ const openAIController = {
 
       // T점수 계산
       const scoreSum = parsingScore.reduce((acc, cur) => acc + cur);
-      const aver = EBT_Table_Info[parsingType].average;
+      const aver = [parsingType].average;
       const stand = EBT_Table_Info[parsingType].standard;
       const tScore = (((scoreSum - aver) / stand) * 10 + 50).toFixed(2);
       // 검사 결과
@@ -607,9 +607,10 @@ const openAIController = {
 
       // 검사 결과가 갱신 되었기에 정서 결과 세션 삭제
       delete req.session.psy_testResult_promptArr_last;
-      /* EBT Data DB 저장 */
+
+      /* DB 저장 */
       if (parsingType) {
-        /* DB 저장 */
+        /* TODO# New EBT Table SQL 변경 예정 */
         const table = EBT_Table_Info[parsingType].table;
         const attribute = EBT_Table_Info[parsingType].attribute;
         // 오늘 날짜 변환
@@ -705,6 +706,22 @@ const openAIController = {
             console.log("Err sqlMessage: " + err.sqlMessage);
           } else console.log("AI Analysis Data LOG DB INSERT Success!");
         });
+
+        // Todo => soyes_ai_Ebt_Result row 저장
+
+        // const ebt_result_table = Consult_Table_Info["Analysis"].table;
+        // const ebt_result_attribute = Consult_Table_Info["Analysis"].attribute;
+
+        // // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
+        // const duple_query = `INSERT INTO ${ebt_result_table} (${ebt_result_attribute.pKey}, ${ebt_result_attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
+        //   ${ebt_result_attribute.attr1} = VALUES(${ebt_result_attribute.attr1});`;
+
+        // const duple_value = [parsepUid, JSON.stringify(message)];
+
+        // connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
+        //   if (error) console.log(error);
+        //   else console.log("Ella Consult Analysis UPDATE Success!");
+        // });
       }
     } catch (err) {
       console.log(err);
@@ -1020,7 +1037,6 @@ const openAIController = {
       //   };
 
       //   let resolvedCompareEbtAnalysis; // EBT 분석을 담을 배열
-
       //   // compareTypeMap에 맵핑되는 분야의 검사 결과를 DB에서 조회
       //   const compareEbtAnalysis = await compareTypeMap[type].map(
       //     async (ebtClass) => {
@@ -1522,7 +1538,7 @@ Todo List가 아니라고 판단되면 제외한다.
       });
     }
   },
-  // 정서멘토 모델 - 엘라
+  // 정서멘토 모델 - 엘라 (Regercy)
   postOpenAIConsultingLala: async (req, res) => {
     const { EBTData } = req.body;
     // console.log(EBTData);
@@ -1614,7 +1630,7 @@ Todo List가 아니라고 판단되면 제외한다.
 
         let resolvedCompareEbtAnalysis; // EBT 분석을 담을 배열
 
-        // compareTypeMap에 맵핑되는 분야의 검사 결과를 DB에서 조회
+        // TODO# select_soyes_AI_Ebt_Analyis 갱신 후 매개변수 조정 예정
         const compareEbtAnalysis = await compareTypeMap[type].map(
           async (ebtClass) => {
             return await select_soyes_AI_Ebt_Analyis(
@@ -1963,7 +1979,7 @@ Todo List가 아니라고 판단되면 제외한다.
         // 심리 검사 결과 프롬프트 삽입
         console.log("심리 검사 결과 프롬프트 삽입");
         let psy_testResult_promptArr_last = []; // 2점을 획득한 정서행동검사 문항을 저장하는 prompt
-        // 해당 계정의 모든 정서행동검사 결과 DB에서 차출
+        // TODO# EBT Table 갱신 후 변경 예정
         const psy_testResult_promptArr = EBT_classArr.map(async (ebt_class) => {
           const select_Ebt_Result = await select_soyes_AI_Ebt_Table(
             EBT_Table_Info[ebt_class].table, // Table Name
@@ -2072,10 +2088,10 @@ Todo List가 아니라고 판단되면 제외한다.
         message: response.choices[0].message.content.slice(0, -1),
         emotion,
       };
-      console.log([
-        ...parseMessageArr,
-        { role: "assistant", content: message.message },
-      ]);
+      // console.log([
+      //   ...parseMessageArr,
+      //   { role: "assistant", content: message.message },
+      // ]);
 
       // 세션 확인 코드
       // console.log(req.session);
@@ -2116,8 +2132,11 @@ Todo List가 아니라고 판단되면 제외한다.
 
       // DB 조회 => User Table + User EBT Table JOIN 후 관련 데이터 전달
       const user_table = User_Table_Info.table;
+
+      // TODO# EBT Table 갱신 후 변경 예정
       const ebt_log_table = EBT_Table_Info["Log"].table;
       const ebt_log_attribute = EBT_Table_Info["Log"].attribute;
+
       const pt_log_table = PT_Table_Info["Log"].table;
       const pt_log_attribute = PT_Table_Info["Log"].attribute;
       const consult_log_table = Consult_Table_Info["Log"].table;
@@ -2361,7 +2380,7 @@ Todo List가 아니라고 판단되면 제외한다.
       // console.log(returnObj);
       */
 
-      // EBT DB에서 차출 - Arr
+      // TODO# New EBT Table 갱신 후 변경 예정
       const ebtResultArr = EBT_classArr.map(async (ebt_class) => {
         const select_Ebt_Result = await select_soyes_AI_Ebt_Result(
           EBT_Table_Info[ebt_class],
