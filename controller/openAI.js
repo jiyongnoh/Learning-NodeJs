@@ -5,7 +5,7 @@ const mysql = require("mysql");
 const { dbconfig_ai } = require("../DB/database");
 
 // Redis 연결
-const redisStore = require("../DB/redisClient");
+// const redisStore = require("../DB/redisClient");
 
 // AI DB 연결
 const connection_AI = mysql.createConnection(dbconfig_ai);
@@ -134,16 +134,16 @@ const {
   persnal_short, // 성격검사 짧은 결과
   persnal_long, // 성격검사 양육 코칭 결과
   ebt_School_Result,
-  ebt_Friend_Result,
-  ebt_Family_Result,
-  ebt_Mood_Result,
-  ebt_Unrest_Result,
-  ebt_Sad_Result,
-  ebt_Health_Result,
-  ebt_Attention_Result,
-  ebt_Movement_Result,
-  ebt_Angry_Result,
-  ebt_Self_Result,
+  // ebt_Friend_Result,
+  // ebt_Family_Result,
+  // ebt_Mood_Result,
+  // ebt_Unrest_Result,
+  // ebt_Sad_Result,
+  // ebt_Health_Result,
+  // ebt_Attention_Result,
+  // ebt_Movement_Result,
+  // ebt_Angry_Result,
+  // ebt_Self_Result,
   ebt_Analysis,
 } = require("../DB/psy_test");
 
@@ -266,7 +266,7 @@ const select_soyes_AI_Ebt_Table = async (
     return { testResult: "", ebt_school_data: {} };
   }
 };
-// // TODO# New EBT Table 갱신 후 변경 예정
+// TODO# New EBT Table 갱신 후 변경 예정
 const select_soyes_AI_Ebt_Result = async (inputTable, parsepUid) => {
   // 동기식 DB 접근 함수 1. Promise 생성 함수
   try {
@@ -593,17 +593,15 @@ const openAIController = {
       };
 
       // 메일 전송 (비동기)
-      /* 메일 전송 봉인
-        transporter.sendMail(mailOptions, function (error, info) {
-          if (error) {
-            console.log("Mail Send Fail!");
-            res.json("Mail Send Fail!");
-          } else {
-            console.log("Mail Send Success!");
-            console.log(info.envelope);
-          }
-        });
-      */
+      // transporter.sendMail(mailOptions, function (error, info) {
+      //   if (error) {
+      //     console.log("Mail Send Fail!");
+      //     res.json("Mail Send Fail!");
+      //   } else {
+      //     console.log("Mail Send Success!");
+      //     console.log(info.envelope);
+      //   }
+      // });
 
       // 검사 결과가 갱신 되었기에 정서 결과 세션 삭제
       delete req.session.psy_testResult_promptArr_last;
@@ -623,6 +621,115 @@ const openAIController = {
         // soyes_ai_Ebt Table 삽입
         // 1. SELECT TEST (row가 있는지 없는지 검사)
         const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`;
+        const ebt_data = await fetchUserData(connection_AI, select_query);
+
+        // 2. UPDATE TEST (row값이 있는 경우 실행)
+        if (ebt_data[0]) {
+          const update_query = `UPDATE ${table} SET ${Object.values(attribute)
+            .filter((el) => el !== "uid")
+            .map((el) => {
+              return `${el} = ?`;
+            })
+            .join(", ")} WHERE ${attribute.pKey} = ?`;
+          // console.log(update_query);
+
+          const update_value = [
+            ...parsingScore,
+            JSON.stringify({ ...mailOptions, date }),
+            date,
+            parsepUid,
+          ];
+
+          // console.log(update_value);
+
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("AI Analysis Data DB UPDATE Success!");
+            }
+          );
+        }
+        // 3. INSERT TEST (row값이 없는 경우 실행)
+        else {
+          const insert_query = `INSERT INTO ${table} (${Object.values(
+            attribute
+          ).join(", ")}) VALUES (${Object.values(attribute)
+            .map((el) => "?")
+            .join(", ")})`;
+          // console.log(insert_query);
+
+          const insert_value = [
+            parsepUid,
+            ...parsingScore,
+            JSON.stringify({ ...mailOptions, date }),
+            date,
+          ];
+          // console.log(insert_value);
+
+          connection_AI.query(
+            insert_query,
+            insert_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("AI Analysis Data DB INSERT Success!");
+            }
+          );
+        }
+
+        // soyes_ai_Ebt_Log Table 삽입
+        const table_log = EBT_Table_Info["Log"].table; // 해당 table은 soyes_ai_User table과 외래키로 연결된 상태
+        const attribute_log = EBT_Table_Info["Log"].attribute;
+
+        const log_insert_query = `INSERT INTO ${table_log} (${Object.values(
+          attribute_log
+        ).join(", ")}) VALUES (${Object.values(attribute_log)
+          .map((el) => "?")
+          .join(", ")})`;
+        // console.log(insert_query);
+
+        const log_insert_value = [
+          parsepUid,
+          date,
+          JSON.stringify({ ...mailOptions, date }),
+          type,
+          tScore,
+        ];
+        // console.log(insert_value);
+
+        connection_AI.query(log_insert_query, log_insert_value, (err) => {
+          if (err) {
+            console.log("AI Analysis Data LOG DB INSERT Fail!");
+            console.log("Err sqlMessage: " + err.sqlMessage);
+          } else console.log("AI Analysis Data LOG DB INSERT Success!");
+        });
+
+        // Todo => soyes_ai_Ebt_Result row 저장
+
+        // const ebt_result_table = Consult_Table_Info["Analysis"].table;
+        // const ebt_result_attribute = Consult_Table_Info["Analysis"].attribute;
+
+        // // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
+        // const duple_query = `INSERT INTO ${ebt_result_table} (${ebt_result_attribute.pKey}, ${ebt_result_attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
+        //   ${ebt_result_attribute.attr1} = VALUES(${ebt_result_attribute.attr1});`;
+
+        // const duple_value = [parsepUid, JSON.stringify(message)];
+
+        // connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
+        //   if (error) console.log(error);
+        //   else console.log("Ella Consult Analysis UPDATE Success!");
+        // });
+      }
+
+      /* TODO# 2024-08-12 - new DB 저장 */
+      if (false) {
+        /* TODO# New EBT Table SQL 변경 예정 */
+        const table = "soyes_ai_EBT";
+
+        // soyes_ai_Ebt Table 삽입
+        // 1. SELECT TEST (row가 있는지 없는지 검사)
+        const select_query = `SELECT * FROM ${table} WHERE uid ='${parsepUid}' LIMIT 1`;
         const ebt_data = await fetchUserData(connection_AI, select_query);
 
         // 2. UPDATE TEST (row값이 있는 경우 실행)
@@ -2811,25 +2918,27 @@ Todo List가 아니라고 판단되면 제외한다.
       console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
 
       // TODO - Mood Table Select
-
-      // Mood Table 명시
-      const table = Ella_Training_Table_Info["Mood"].table;
-      const attribute = Ella_Training_Table_Info["Mood"].attribute;
-      // Mood Table User 조회
-      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
-      const select_data = await fetchUserData(connection_AI, select_query);
-      // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
-      if (!select_data[0] || select_data[0].mood_round_idx === 4)
-        return res.json({ mood_round_idx: 0, mood_name: "" });
-      // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
-      else {
-        return res.json({
-          mood_round_idx: select_data[0].mood_round_idx,
-          mood_name: select_data[0].mood_name,
-        });
+      if (false) {
+        // Mood Table 명시
+        const table = Ella_Training_Table_Info["Mood"].table;
+        const attribute = Ella_Training_Table_Info["Mood"].attribute;
+        // Mood Table User 조회
+        const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+        const select_data = await fetchUserData(connection_AI, select_query);
+        // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
+        if (!select_data[0] || select_data[0].mood_round_idx === 4)
+          return res.json({ mood_round_idx: 0, mood_name: "" });
+        // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
+        else {
+          return res.json({
+            mood_round_idx: select_data[0].mood_round_idx,
+            mood_name: select_data[0].mood_name,
+          });
+        }
       }
 
-      // res.json({ mood_round_idx: 0, mood_name: "" }); // dummy data (임시)
+      // dummy data (임시)
+      res.json({ mood_round_idx: 0, mood_name: "" });
     } catch (err) {
       console.error(err);
       res.json({
@@ -2843,7 +2952,7 @@ const ellaMoodController = {
   // 훈련 트레이너 - 엘라 (New)
   postOpenAIEllaMoodTraning: async (req, res) => {
     const { data } = req.body;
-    console.log(data);
+    // console.log(data);
     let parseData,
       parseMessageArr = [],
       parsepUid; // Parsing 변수
@@ -3040,7 +3149,7 @@ Todo List가 아니라고 판단되면 제외한다.
       switch (type) {
         case "first":
           const insert_query = `INSERT INTO ${table} (${attribute.fKey}, ${attribute.attr1}, ${attribute.attr2}, ${attribute.attr3}, ${attribute.attr6}) VALUES (?, ?, ?, ?, ?);`;
-          console.log(insert_query);
+          // console.log(insert_query);
           const insert_value = [
             parsepUid,
             1,
@@ -3048,15 +3157,18 @@ Todo List가 아니라고 판단되면 제외한다.
             mood_cognitive_score,
             "Ella",
           ];
-          console.log(insert_value);
-          connection_AI.query(
-            insert_query,
-            insert_value,
-            (error, rows, fields) => {
-              if (error) console.log(error);
-              else console.log("Mood First Insert Success!");
-            }
-          );
+          // console.log(insert_value);
+          // TODO - 2024.08.19 이후 해제
+          if (false) {
+            connection_AI.query(
+              insert_query,
+              insert_value,
+              (error, rows, fields) => {
+                if (error) console.log(error);
+                else console.log("Mood First Insert Success!");
+              }
+            );
+          }
           break;
         case "second":
           update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr4} = ? WHERE ${attribute.pKey} = ?`;
@@ -3142,26 +3254,27 @@ Todo List가 아니라고 판단되면 제외한다.
 
       console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
 
-      // TODO - Mood Table Select
-
-      // Mood Table 명시
-      const table = Ella_Training_Table_Info["Mood"].table;
-      const attribute = Ella_Training_Table_Info["Mood"].attribute;
-      // Mood Table User 조회
-      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
-      const select_data = await fetchUserData(connection_AI, select_query);
-      // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
-      if (!select_data[0] || select_data[0].mood_round_idx === 4)
-        return res.json({ mood_round_idx: 0, mood_name: "" });
-      // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
-      else {
-        return res.json({
-          mood_round_idx: select_data[0].mood_round_idx,
-          mood_name: select_data[0].mood_name,
-        });
+      // TODO - 2024.08.19 이후 해제 (Mood Table Select)
+      if (false) {
+        // Mood Table 명시
+        const table = Ella_Training_Table_Info["Mood"].table;
+        const attribute = Ella_Training_Table_Info["Mood"].attribute;
+        // Mood Table User 조회
+        const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+        const select_data = await fetchUserData(connection_AI, select_query);
+        // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
+        if (!select_data[0] || select_data[0].mood_round_idx === 4)
+          return res.json({ mood_round_idx: 0, mood_name: "" });
+        // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
+        else {
+          return res.json({
+            mood_round_idx: select_data[0].mood_round_idx,
+            mood_name: select_data[0].mood_name,
+          });
+        }
       }
-
-      // res.json({ mood_round_idx: 0, mood_name: "" }); // dummy data (임시)
+      // dummy data (임시)
+      res.json({ mood_round_idx: 0, mood_name: "" });
     } catch (err) {
       console.error(err);
       res.json({
