@@ -2824,14 +2824,16 @@ Todo List가 아니라고 판단되면 제외한다.
             "Ella",
           ];
           console.log(insert_value);
-          connection_AI.query(
-            insert_query,
-            insert_value,
-            (error, rows, fields) => {
-              if (error) console.log(error);
-              else console.log("Mood First Insert Success!");
-            }
-          );
+          if (false) {
+            connection_AI.query(
+              insert_query,
+              insert_value,
+              (error, rows, fields) => {
+                if (error) console.log(error);
+                else console.log("Mood First Insert Success!");
+              }
+            );
+          }
           break;
         case "second":
           update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr4} = ? WHERE ${attribute.pKey} = ?`;
@@ -3158,7 +3160,7 @@ Todo List가 아니라고 판단되면 제외한다.
             "Ella",
           ];
           // console.log(insert_value);
-          // TODO - 2024.08.19 이후 해제
+          // LOCK - 2024.08.19 이후 해제 (1회기 Insert Query)
           if (false) {
             connection_AI.query(
               insert_query,
@@ -3172,13 +3174,13 @@ Todo List가 아니라고 판단되면 제외한다.
           break;
         case "second":
           update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr4} = ? WHERE ${attribute.pKey} = ?`;
-          console.log(update_query);
+          // console.log(update_query);
           update_value = [
             2,
             JSON.stringify(mood_todo_list),
             select_data[0].mood_idx,
           ];
-          console.log(update_value);
+          // console.log(update_value);
           connection_AI.query(
             update_query,
             update_value,
@@ -3190,13 +3192,13 @@ Todo List가 아니라고 판단되면 제외한다.
           break;
         case "third":
           update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr5} = ? WHERE ${attribute.pKey} = ?`;
-          console.log(update_query);
+          // console.log(update_query);
           update_value = [
             3,
             JSON.stringify(mood_talk_list),
             select_data[0].mood_idx,
           ];
-          console.log(update_value);
+          // console.log(update_value);
           connection_AI.query(
             update_query,
             update_value,
@@ -3208,9 +3210,9 @@ Todo List가 아니라고 판단되면 제외한다.
           break;
         case "fourth":
           update_query = `UPDATE ${table} SET ${attribute.attr1} = ? WHERE ${attribute.pKey} = ?`;
-          console.log(update_query);
+          // console.log(update_query);
           update_value = [4, select_data[0].mood_idx];
-          console.log(update_value);
+          // console.log(update_value);
           connection_AI.query(
             update_query,
             update_value,
@@ -3254,7 +3256,7 @@ Todo List가 아니라고 판단되면 제외한다.
 
       console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
 
-      // TODO - 2024.08.19 이후 해제 (Mood Table Select)
+      // LOCK - 2024.08.19 이후 해제 (Mood Table Select)
       if (false) {
         // Mood Table 명시
         const table = Ella_Training_Table_Info["Mood"].table;
