@@ -2940,7 +2940,7 @@ Todo List가 아니라고 판단되면 제외한다.
       }
 
       // dummy data (임시)
-      res.json({ mood_round_idx: 0, mood_name: "" });
+      return res.json({ mood_round_idx: 0, mood_name: "" });
     } catch (err) {
       console.error(err);
       res.json({
@@ -3041,7 +3041,8 @@ const ellaMoodController = {
         case "another":
           promptArr.push({
             role: "system",
-            content: `생성된 Text는 질문으로 끝나서는 안된다. User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다.`,
+            content: `User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다. 
+            "~해보는 것도 좋을 것 같아" `,
           });
           parseMessageArr = [...messageArr];
           break;
