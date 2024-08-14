@@ -1502,524 +1502,6 @@ const openAIController = {
       });
     }
   },
-  // 훈련 트레이너 - 엘라 (New)
-  postOpenAITraningElla: async (req, res) => {
-    const { data } = req.body;
-    console.log(data);
-    let parseData,
-      parseMessageArr = [],
-      parsepUid; // Parsing 변수
-    let promptArr = []; // 삽입 Prompt Array
-
-    try {
-      if (typeof data === "string") {
-        parseData = JSON.parse(data);
-      } else parseData = data;
-
-      const {
-        messageArr,
-        pUid,
-        code,
-        mood_situation,
-        mood_thought,
-        mood_todo_list,
-        mood_talk_list,
-      } = parseData;
-
-      // No pUid => return
-      if (!pUid) {
-        console.log("No pUid input value - 400");
-        return res.json({ message: "No pUid input value - 400" });
-      }
-      // No type => return
-      if (!code) {
-        console.log("No code input value - 400");
-        return res.json({ message: "No type input value - 400" });
-      }
-      // No type => return
-      if (!messageArr) {
-        console.log("No messageArr input value - 400");
-        return res.json({ message: "No messageArr input value - 400" });
-      }
-
-      // pUid default값 설정
-      parsepUid = pUid;
-      console.log(`엘라 훈련 API 호출 - pUid: ${parsepUid}`);
-
-      promptArr.push(persona_prompt_lala_v5); // 엘라 페르소나
-
-      // code 매칭 프롬프트 삽입
-      switch (code) {
-        case "emotion":
-          promptArr.push({
-            role: "system",
-            content: `유저가 마지막으로 한 말에 공감하되, 절대 질문으로 문장을 끝내지 않는다.`,
-          });
-          parseMessageArr = [...messageArr];
-          break;
-        case "situation":
-          promptArr.push({
-            role: "system",
-            content: `아래 문장에 기초하여 유저에게 상황을 바꿀 방법을 생각해보게 한다.
-            '''
-            ${mood_situation}
-            '''
-            예시: '~할 때 ~를 만난다고 했어. 이 상황을 바꿀 방법이 있을까?'
-            `,
-          });
-          parseMessageArr = [...messageArr];
-          break;
-        case "solution":
-          promptArr.push({
-            role: "system",
-            content: `user가 잘 말하면 격려해준다. user가 말하지 않은 해결 방법을 하나 말해준다. 초등학교 6학년이 할 수 있는 방법이어야 한다.
-            예시: '~해보면 어떨까?'
-            `,
-          });
-          parseMessageArr = [...messageArr];
-          break;
-        case "thought":
-          promptArr.push({
-            role: "system",
-            content: `아래 문장에 기초해서 다른 관점을 생각해보도록 한다.
-            '''
-            ${mood_thought}
-            '''
-            예시: '그건 정말 그래. 그런데 다르게도 생각해볼 수 있을까?'`,
-          });
-          parseMessageArr = [...messageArr];
-          break;
-        case "another":
-          promptArr.push({
-            role: "system",
-            content: `생성된 Text는 질문으로 끝나서는 안된다. User응답에 반응한 뒤 상황을 다른 관점으로는 어떻게 볼 수 있는지를 한 가지 제시한다.`,
-          });
-          parseMessageArr = [...messageArr];
-          break;
-        case "listing":
-          promptArr.push({
-            role: "system",
-            content: `아래 3개의 문장은 유저가 작성한 Todo List이다. 
-보기좋게 다듬어서 목록 형식으로 나열한다. 
-Todo List가 아니라고 판단되면 제외한다.
-'''
-1. ${mood_todo_list[0]}
-2. ${mood_todo_list[1]}
-3. ${mood_todo_list[2]}
-'''
-반드시 목록 형식으로 작성되어야 한다.`,
-          });
-
-          break;
-        case "talking":
-          promptArr.push({
-            role: "system",
-            content: `아래 3개의 문장은 유저가 mood_name에게 하고싶은 말이다.
-보기좋게 다듬어서 목록 형식으로 나열한다.
-'''
-1. ${mood_talk_list[0]}
-2. ${mood_talk_list[1]}
-3. ${mood_talk_list[2]}
-'''
-반드시 목록 형식으로 작성되어야 한다.`,
-          });
-          break;
-      }
-
-      // console.log(promptArr);
-
-      const response = await openai.chat.completions.create({
-        messages: [...promptArr, ...parseMessageArr],
-        model: "gpt-4o", // gpt-4-turbo, gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
-      });
-
-      const message = {
-        message: response.choices[0].message.content,
-      };
-
-      return res.status(200).json(message);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({
-        message: "Server Error - 500 Bad Gateway" + err.message,
-      });
-    }
-  },
-  // 정서멘토 모델 - 엘라 (Regercy)
-  postOpenAIConsultingLala: async (req, res) => {
-    const { EBTData } = req.body;
-    // console.log(EBTData);
-    let parseEBTdata, parseMessageArr, parsepUid; // Parsing 변수
-    let promptArr = []; // 삽입 Prompt Array
-    let userPrompt = []; // 삽입 User Prompt Array
-    // let testClass = "",
-    //   testClass_cb = "";
-
-    try {
-      if (typeof EBTData === "string") {
-        parseEBTdata = JSON.parse(EBTData);
-      } else parseEBTdata = EBTData;
-
-      const { messageArr, pUid, type } = parseEBTdata;
-
-      // No pUid => return
-      if (!pUid) {
-        console.log("No pUid input value - 400");
-        return res.json({ message: "No pUid input value - 400" });
-      }
-      // No type => return
-      if (!type) {
-        console.log("No type input value - 400");
-        return res.json({ message: "No type input value - 400" });
-      }
-      // No type => return
-      if (!messageArr) {
-        console.log("No messageArr input value - 400");
-        return res.json({ message: "No messageArr input value - 400" });
-      }
-
-      // messageArr가 문자열일 경우 json 파싱
-      if (typeof messageArr === "string") {
-        parseMessageArr = JSON.parse(messageArr);
-      } else parseMessageArr = [...messageArr];
-
-      // pUid default값 설정
-      parsepUid = pUid;
-      console.log(
-        `엘라 상담 API /consulting_emotion_lala Path 호출 - pUid: ${parsepUid}`
-      );
-
-      // 고정 삽입 프롬프트
-      promptArr.push(persona_prompt_lala_v5); // 엘라 페르소나
-      promptArr.push(info_prompt); // 유저관련 정보
-
-      // const lastUserContent =
-      //   parseMessageArr[parseMessageArr.length - 1].content; // 유저 마지막 멘트
-
-      // NO REQ 질문 처리. 10초 이상 질문이 없을 경우 Client 측에서 'NO REQUEST' 메시지를 담은 요청을 보냄. 그에 대한 처리
-      // if (lastUserContent.includes("NO REQ")) {
-      //   console.log("NO REQUEST 전달");
-      //   parseMessageArr.pop(); // 'NO REQUEST 질문 삭제'
-      //   parseMessageArr.push(no_req_prompt);
-      //   promptArr.push(sentence_division_prompt);
-
-      //   const response = await openai.chat.completions.create({
-      //     messages: [...promptArr, ...parseMessageArr],
-      //     model: "gpt-4-0125-preview", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
-      //   });
-
-      //   res.json({
-      //     message: response.choices[0].message.content,
-      //     emotion: 0,
-      //   });
-
-      //   return;
-      // }
-
-      // 대화 6회 미만 - 심리 상담 프롬프트 삽입
-      if (parseMessageArr.length < 11) {
-        console.log("심리 상담 프롬프트 삽입");
-        promptArr.push(EBT_Table_Info[type].consult);
-      }
-      // 대화 6회 - 심리 상담 프롬프트 + 심리 상태 분석 프롬프트 삽입
-      else if ((parseMessageArr.length + 1) % 12 === 0) {
-        console.log("심리 상담 프롬프트 + 심리 요약 프롬프트 삽입");
-        promptArr.push(EBT_Table_Info[type].consult);
-        // 비교 분석용 EBT class 맵
-        const compareTypeMap = {
-          School: ["School", "Attention"], // 학업/성적 상담은 School, Attention 분석과 비교하여 해석.
-          Friend: ["Friend", "Movement"],
-          Family: ["Family"],
-          Mood: ["Mood", "Unrest", "Sad", "Angry"],
-          Health: ["Health"],
-          Self: ["Self"],
-        };
-
-        let resolvedCompareEbtAnalysis; // EBT 분석을 담을 배열
-
-        // TODO# select_soyes_AI_Ebt_Analyis 갱신 후 매개변수 조정 예정
-        const compareEbtAnalysis = await compareTypeMap[type].map(
-          async (ebtClass) => {
-            return await select_soyes_AI_Ebt_Analyis(
-              EBT_Table_Info[ebtClass],
-              parsepUid
-            );
-          }
-        );
-        // Promise Pending 대기
-        await Promise.all(compareEbtAnalysis).then((data) => {
-          resolvedCompareEbtAnalysis = [...data]; // resolve 상태로 반환된 prompt 배열을 psy_testResult_promptArr_last 변수에 복사
-        });
-        // userPrompt 명령 추가
-        userPrompt.push({
-          role: "user",
-          content: `아래는 user의 정서행동검사 결과야.
-          '''
-          ${resolvedCompareEbtAnalysis.map((data) => {
-            const { ebtClass, analyisResult } = data;
-            return `
-            ${ebtClass}: { ${
-              analyisResult === "NonTesting"
-                ? `'정서행동검사 - ${analyisResult}'을 실시하지 않았습니다.`
-                : analyisResult
-            }}
-            `;
-          })}
-          '''
-          지금까지 대화를 기반으로 user의 심리 상태를 3문장으로 요약하고, 위 정서행동검사 결과와 비교하여 2문장으로 해석해줘.
-            `,
-        });
-      }
-      // 대화 7회 - 더미 데이터 반환 (7회마다)
-      else if ((parseMessageArr.length + 1) % 14 === 0) {
-        console.log("더미 데이터 반환 (클라이언트의 솔루션 획득 시점)");
-        const message = {
-          message: "Dummy Message",
-          emotion: 0,
-        };
-        return res.status(200).json(message);
-      }
-      // 대화 8회 초과 - 심리 솔루션 프롬프트 삽입 || 기본 상담 프롬프트 삽입
-      else {
-        console.log(
-          `심리 솔루션 프롬프트 삽입 - solution:${req.session.solution?.solutionClass}`
-        );
-        // 유저 마지막 멘트
-        const lastUserContent =
-          parseMessageArr[parseMessageArr.length - 1].content;
-        // console.log(lastUserContent);
-
-        // 컨텐츠 실시 여부 선택 세션 - 9*n회 문답에서 실시
-        if (
-          lastUserContent.includes("false") ||
-          lastUserContent.includes("true")
-        ) {
-          // 컨텐츠를 실시할 경우
-          if (lastUserContent.includes("true")) {
-            let message = {
-              message: "좋아! 그럼 명상에 집중해보자!",
-              emotion: 0,
-            };
-            // 컨텐츠 종류에 따른 고정 멘트 반환
-            switch (req.session?.solution?.solutionClass) {
-              // 명상
-              case "meditation":
-                console.log(`명상 고정 멘트 반환`);
-                message.message = "좋아! 그럼 명상에 집중해보자!";
-                delete req.session.solution;
-                return res.status(200).json(message);
-              // 인지행동
-              case "cognitive":
-                console.log(`인지행동 고정 멘트 반환`);
-                message.message = "좋아! 그럼 문제에 집중해보자!";
-                delete req.session.solution;
-                return res.status(200).json(message);
-              // 디폴트(명상)
-              default:
-                console.log(`디폴트 멘트 반환`);
-                message.message = "좋아! 그럼 디폴트에 집중해보자!";
-                delete req.session.solution;
-                return res.status(200).json(message);
-            }
-          }
-          // 컨텐츠를 안할 경우 - 솔루션 세션 삭제
-          else delete req.session.solution;
-        }
-        // 세션에 솔루션 관련 프롬프트가 있는 경우는 삽입
-        if (req.session.solution?.prompt)
-          promptArr.push(req.session.solution.prompt);
-
-        // 8회 이후의 답변은 막아두기
-        // req.session.solution
-        //   ? promptArr.push(req.session.solution.prompt)
-        //   : promptArr.push(EBT_Table_Info[type].solution);
-
-        // 솔루션 세션이 아닌 경우 기본 상담 프롬프트 삽입
-        promptArr.push(EBT_Table_Info[type].consult);
-      }
-
-      /* 
-      // 검사 결과 분석 관련 멘트 감지
-      if (
-        test_result_ment.some((el) => {
-          if (lastUserContent.includes(el.text)) {
-            testClass = el.class; // 검사 분야 저장
-            return true;
-          } else return false;
-        })
-      ) {
-        console.log(`정서행동검사 결과 - ${testClass} 분석 프롬프트 삽입`);
-        // 감지된 분야 선택
-        // const random_class = EBT_classArr[class_map[testClass]];
-        const random_class = testClass;
-
-        // 심리 결과 분석 프롬프트
-        parseMessageArr.push({
-          role: "user",
-          content: `마지막 질문에 대해 1문장 이내로 답변한 뒤 (이해하지 못했으면 답변하지마), 
-          '너의 심리검사 결과를 봤어!'라고 언급하면서 ${random_class} 관련 심리검사 결과를 분석한 아동의 심리 상태를 5문장 이내로 설명해줘.
-          만약 심리 검사 결과를 진행하지 않았다면, 잘 모르겠다고 답변해줘.
-          . 혹은 ? 같은 특수문자로 끝나는 각 마디 뒤에는 반드시 줄바꿈(\n)을 추가해줘.
-          검사 결과가 있다면 답변 마지막에는 '검사 결과에 대해 더 궁금한점이 있니?'를 추가해줘.`,
-        });
-        promptArr.push({
-          role: "system",
-          content: `이번 문답은 예외적으로 6문장 이내로 답변을 생성합니다.`,
-        });
-        // 검사 분야 세션 추가. 해당 세션동안 검사 결과 분석은 1회만 진행되도록 세션 데이터 설정.
-        req.session.ebt_class = random_class;
-      }
-      // 인지행동 관련 멘트 감지
-      // 인지행동 세션 데이터가 없고, 인지행동 검사 관련 멘트 감지
-      else if (
-        !req.session.cb_class &&
-        cb_solution_ment.some((el) => {
-          if (lastUserContent.includes(el.text)) {
-            testClass_cb = el.class; // 인지 분야 저장
-            return true;
-          } else return false;
-        })
-      ) {
-        // 고정 답변3 프롬프트 삽입 - 인지행동 치료 문제
-        console.log("인지행동 치료 프롬프트 삽입");
-        let cb_testArr;
-
-        // 인지행동 문항 맵핑
-        const cb_class_map = {
-          school: cb_test_school,
-          friend: cb_test_family,
-          family: cb_test_friend,
-          etc: cb_test_remain,
-        };
-
-        // 감지된 인지행동 문제 분야 선택
-        cb_testArr = cb_class_map[testClass_cb];
-        req.session.cb_class = testClass_cb;
-
-        // 랜덤 문항 1개 선택
-        const random_cb_index = Math.floor(Math.random() * cb_testArr.length);
-        const random_cb_question = cb_testArr[random_cb_index];
-        req.session.cb_question = random_cb_question;
-
-        // console.log(random_cb_question);
-
-        // 인지행동 문제 프롬프트
-        parseMessageArr.push({
-          role: "user",
-          content: `마지막 질문에 대해 1문장 이내로 답변한 뒤 (이해하지 못했으면 답변하지마), 
-          이후 '그 전에 우리 상황극 한 번 하자!' 라고 말한 뒤 다음 문단에 오는 인지행동 검사를 문제와 문항으로 나누어 user에게 제시해줘.
-
-          ${random_cb_question.question}
-
-          문항 앞에는 '1) 2) 3) 4)'같이 번호를 붙이고 점수는 제거해줘.
-          답변 마지막에 '넌 이 상황에서 어떻게 할거야? 번호로 알려줘!'를 추가해줘.
-          `,
-        });
-        promptArr.push({
-          role: "system",
-          content: `이번 문답은 예외적으로 8문장 이내로 답변을 생성합니다.`,
-        });
-      }
-      // 인지행동 세션 돌입
-      // 인지행동 세션 데이터가 있는 경우
-      else if (req.session.cb_class) {
-        // 정답을 골랐을 경우
-        if (lastUserContent.includes(req.session.cb_question.answer)) {
-          console.log("인지행동 검사 정답 선택");
-          parseMessageArr.push({
-            role: "user",
-            content: `'올바른 답을 골랐구나! 대단해!'를 말한 뒤 ${req.session.cb_question.answer}번 문항에 대한 견해를 2문장 이내로 답변해줘.`,
-          });
-
-          // 인지행동 관련 데이터 초기화
-          delete req.session.cb_class;
-          delete req.session.cb_question;
-          delete req.session.cb_wrongCnt;
-        }
-        // 오답을 고를 경우
-        else {
-          console.log("인지행동 검사 오답 선택");
-          // 오답 횟수 카운트
-          if (!req.session.cb_wrongCnt) req.session.cb_wrongCnt = 1;
-          else req.session.cb_wrongCnt++;
-
-          // 오답 횟수 4회 미만
-          if (req.session.cb_wrongCnt < 4) {
-            parseMessageArr.push({
-              role: "user",
-              content: `'user'가 고른 문항에 대한 견해를 2문장 이내로 답변한 뒤, 마지막에는 '그치만 다시 한 번 생각해봐!' 를 추가해줘.
-              (만약 문항을 고르지 않았다면 1문장 이내로 문제에 집중해달라고 'user'에게 부탁해줘. 이 때는 '그치만 다시 한 번 생각해봐!'를 추가하지마.)`,
-            });
-          }
-          // 오답 횟수 4회 이상
-          else {
-            console.log("인지행동 검사 오답 4회 이상 선택 -> 정답 알려주기");
-            parseMessageArr.push({
-              role: "user",
-              content: `'올바른 답은 ${req.session.cb_question.answer}번이였어!' 를 말한 뒤 마지막 ${req.session.cb_question.answer}번 문항에 대한 견해를 2문장 이내로 답변해줘.`,
-            });
-
-            // 인지행동 관련 데이터 초기화
-            delete req.session.cb_class;
-            delete req.session.cb_question;
-            delete req.session.cb_wrongCnt;
-          }
-        }
-      } else promptArr.push(sentence_division_prompt);
-      */
-
-      // 상시 삽입 프롬프트
-      // promptArr.push(completions_emotion_prompt); // 답변 이모션 넘버 확인 프롬프트 삽입
-
-      // console.log(promptArr);
-
-      const response = await openai.chat.completions.create({
-        messages: [...promptArr, ...parseMessageArr, ...userPrompt],
-        model: "gpt-4o", // gpt-4-turbo, gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
-      });
-
-      // let emotion = parseInt(response.choices[0].message.content.slice(-1));
-      // console.log("emotion: " + emotion);
-
-      const message = {
-        message: response.choices[0].message.content,
-        emotion: 0,
-      };
-      // 대화 내역 로그
-      // console.log([
-      //   ...parseMessageArr,
-      //   { role: "assistant", content: response.choices[0].message.content },
-      //   // response.choices[0].message.content,
-      // ]);
-
-      // 엘라 심리 분석 DB 저장
-      if (parseMessageArr.length === 11) {
-        const table = Consult_Table_Info["Analysis"].table;
-        const attribute = Consult_Table_Info["Analysis"].attribute;
-
-        // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
-        const duple_query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
-          ${attribute.attr1} = VALUES(${attribute.attr1});`;
-
-        const duple_value = [parsepUid, JSON.stringify(message)];
-
-        connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
-          if (error) console.log(error);
-          else console.log("Ella Consult Analysis UPDATE Success!");
-        });
-
-        // 엘라 유저 분석 내용 Session 저장
-        req.session.ella_analysis = message.message;
-      }
-      return res.status(200).json(message);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({
-        message: "Server Error - 500 Bad Gateway" + err.message,
-        emotion: 0,
-      });
-    }
-  },
   // 전문상담사 모델 - 소예
   postOpenAIConsultingSoyes: async (req, res) => {
     const { EBTData } = req.body;
@@ -3746,7 +3228,7 @@ const openAIController_Regercy = {
     }
   },
   // (Regercy) 정서멘토 모델 - 엘라
-  postOpenAIConsultingLala: async (req, res) => {
+  postOpenAIConsultingLala_v1: async (req, res) => {
     const { EBTData } = req.body;
     // console.log(EBTData);
     let parseEBTdata, parseMessageArr, parsepUid; // Parsing 변수
@@ -4039,10 +3521,385 @@ const openAIController_Regercy = {
       });
     }
   },
+  // (Regercy) 정서멘토 모델 - 엘라
+  postOpenAIConsultingLala_v2: async (req, res) => {
+    const { EBTData } = req.body;
+    // console.log(EBTData);
+    let parseEBTdata, parseMessageArr, parsepUid; // Parsing 변수
+    let promptArr = []; // 삽입 Prompt Array
+    let userPrompt = []; // 삽입 User Prompt Array
+    // let testClass = "",
+    //   testClass_cb = "";
+
+    try {
+      if (typeof EBTData === "string") {
+        parseEBTdata = JSON.parse(EBTData);
+      } else parseEBTdata = EBTData;
+
+      const { messageArr, pUid, type } = parseEBTdata;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.json({ message: "No pUid input value - 400" });
+      }
+      // No type => return
+      if (!type) {
+        console.log("No type input value - 400");
+        return res.json({ message: "No type input value - 400" });
+      }
+      // No type => return
+      if (!messageArr) {
+        console.log("No messageArr input value - 400");
+        return res.json({ message: "No messageArr input value - 400" });
+      }
+
+      // messageArr가 문자열일 경우 json 파싱
+      if (typeof messageArr === "string") {
+        parseMessageArr = JSON.parse(messageArr);
+      } else parseMessageArr = [...messageArr];
+
+      // pUid default값 설정
+      parsepUid = pUid;
+      console.log(
+        `엘라 상담 API /consulting_emotion_lala Path 호출 - pUid: ${parsepUid}`
+      );
+
+      // 고정 삽입 프롬프트
+      promptArr.push(persona_prompt_lala_v5); // 엘라 페르소나
+      promptArr.push(info_prompt); // 유저관련 정보
+
+      // const lastUserContent =
+      //   parseMessageArr[parseMessageArr.length - 1].content; // 유저 마지막 멘트
+
+      // NO REQ 질문 처리. 10초 이상 질문이 없을 경우 Client 측에서 'NO REQUEST' 메시지를 담은 요청을 보냄. 그에 대한 처리
+      // if (lastUserContent.includes("NO REQ")) {
+      //   console.log("NO REQUEST 전달");
+      //   parseMessageArr.pop(); // 'NO REQUEST 질문 삭제'
+      //   parseMessageArr.push(no_req_prompt);
+      //   promptArr.push(sentence_division_prompt);
+
+      //   const response = await openai.chat.completions.create({
+      //     messages: [...promptArr, ...parseMessageArr],
+      //     model: "gpt-4-0125-preview", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
+      //   });
+
+      //   res.json({
+      //     message: response.choices[0].message.content,
+      //     emotion: 0,
+      //   });
+
+      //   return;
+      // }
+
+      // 대화 6회 미만 - 심리 상담 프롬프트 삽입
+      if (parseMessageArr.length < 11) {
+        console.log("심리 상담 프롬프트 삽입");
+        promptArr.push(EBT_Table_Info[type].consult);
+      }
+      // 대화 6회 - 심리 상담 프롬프트 + 심리 상태 분석 프롬프트 삽입
+      else if ((parseMessageArr.length + 1) % 12 === 0) {
+        console.log("심리 상담 프롬프트 + 심리 요약 프롬프트 삽입");
+        promptArr.push(EBT_Table_Info[type].consult);
+        // 비교 분석용 EBT class 맵
+        const compareTypeMap = {
+          School: ["School", "Attention"], // 학업/성적 상담은 School, Attention 분석과 비교하여 해석.
+          Friend: ["Friend", "Movement"],
+          Family: ["Family"],
+          Mood: ["Mood", "Unrest", "Sad", "Angry"],
+          Health: ["Health"],
+          Self: ["Self"],
+        };
+
+        let resolvedCompareEbtAnalysis; // EBT 분석을 담을 배열
+
+        // TODO# select_soyes_AI_Ebt_Analyis 갱신 후 매개변수 조정 예정
+        const compareEbtAnalysis = await compareTypeMap[type].map(
+          async (ebtClass) => {
+            return await select_soyes_AI_Ebt_Analyis(
+              EBT_Table_Info[ebtClass],
+              parsepUid
+            );
+          }
+        );
+        // Promise Pending 대기
+        await Promise.all(compareEbtAnalysis).then((data) => {
+          resolvedCompareEbtAnalysis = [...data]; // resolve 상태로 반환된 prompt 배열을 psy_testResult_promptArr_last 변수에 복사
+        });
+        // userPrompt 명령 추가
+        userPrompt.push({
+          role: "user",
+          content: `아래는 user의 정서행동검사 결과야.
+          '''
+          ${resolvedCompareEbtAnalysis.map((data) => {
+            const { ebtClass, analyisResult } = data;
+            return `
+            ${ebtClass}: { ${
+              analyisResult === "NonTesting"
+                ? `'정서행동검사 - ${analyisResult}'을 실시하지 않았습니다.`
+                : analyisResult
+            }}
+            `;
+          })}
+          '''
+          지금까지 대화를 기반으로 user의 심리 상태를 3문장으로 요약하고, 위 정서행동검사 결과와 비교하여 2문장으로 해석해줘.
+            `,
+        });
+      }
+      // 대화 7회 - 더미 데이터 반환 (7회마다)
+      else if ((parseMessageArr.length + 1) % 14 === 0) {
+        console.log("더미 데이터 반환 (클라이언트의 솔루션 획득 시점)");
+        const message = {
+          message: "Dummy Message",
+          emotion: 0,
+        };
+        return res.status(200).json(message);
+      }
+      // 대화 8회 초과 - 심리 솔루션 프롬프트 삽입 || 기본 상담 프롬프트 삽입
+      else {
+        console.log(
+          `심리 솔루션 프롬프트 삽입 - solution:${req.session.solution?.solutionClass}`
+        );
+        // 유저 마지막 멘트
+        const lastUserContent =
+          parseMessageArr[parseMessageArr.length - 1].content;
+        // console.log(lastUserContent);
+
+        // 컨텐츠 실시 여부 선택 세션 - 9*n회 문답에서 실시
+        if (
+          lastUserContent.includes("false") ||
+          lastUserContent.includes("true")
+        ) {
+          // 컨텐츠를 실시할 경우
+          if (lastUserContent.includes("true")) {
+            let message = {
+              message: "좋아! 그럼 명상에 집중해보자!",
+              emotion: 0,
+            };
+            // 컨텐츠 종류에 따른 고정 멘트 반환
+            switch (req.session?.solution?.solutionClass) {
+              // 명상
+              case "meditation":
+                console.log(`명상 고정 멘트 반환`);
+                message.message = "좋아! 그럼 명상에 집중해보자!";
+                delete req.session.solution;
+                return res.status(200).json(message);
+              // 인지행동
+              case "cognitive":
+                console.log(`인지행동 고정 멘트 반환`);
+                message.message = "좋아! 그럼 문제에 집중해보자!";
+                delete req.session.solution;
+                return res.status(200).json(message);
+              // 디폴트(명상)
+              default:
+                console.log(`디폴트 멘트 반환`);
+                message.message = "좋아! 그럼 디폴트에 집중해보자!";
+                delete req.session.solution;
+                return res.status(200).json(message);
+            }
+          }
+          // 컨텐츠를 안할 경우 - 솔루션 세션 삭제
+          else delete req.session.solution;
+        }
+        // 세션에 솔루션 관련 프롬프트가 있는 경우는 삽입
+        if (req.session.solution?.prompt)
+          promptArr.push(req.session.solution.prompt);
+
+        // 8회 이후의 답변은 막아두기
+        // req.session.solution
+        //   ? promptArr.push(req.session.solution.prompt)
+        //   : promptArr.push(EBT_Table_Info[type].solution);
+
+        // 솔루션 세션이 아닌 경우 기본 상담 프롬프트 삽입
+        promptArr.push(EBT_Table_Info[type].consult);
+      }
+
+      /* 
+      // 검사 결과 분석 관련 멘트 감지
+      if (
+        test_result_ment.some((el) => {
+          if (lastUserContent.includes(el.text)) {
+            testClass = el.class; // 검사 분야 저장
+            return true;
+          } else return false;
+        })
+      ) {
+        console.log(`정서행동검사 결과 - ${testClass} 분석 프롬프트 삽입`);
+        // 감지된 분야 선택
+        // const random_class = EBT_classArr[class_map[testClass]];
+        const random_class = testClass;
+
+        // 심리 결과 분석 프롬프트
+        parseMessageArr.push({
+          role: "user",
+          content: `마지막 질문에 대해 1문장 이내로 답변한 뒤 (이해하지 못했으면 답변하지마), 
+          '너의 심리검사 결과를 봤어!'라고 언급하면서 ${random_class} 관련 심리검사 결과를 분석한 아동의 심리 상태를 5문장 이내로 설명해줘.
+          만약 심리 검사 결과를 진행하지 않았다면, 잘 모르겠다고 답변해줘.
+          . 혹은 ? 같은 특수문자로 끝나는 각 마디 뒤에는 반드시 줄바꿈(\n)을 추가해줘.
+          검사 결과가 있다면 답변 마지막에는 '검사 결과에 대해 더 궁금한점이 있니?'를 추가해줘.`,
+        });
+        promptArr.push({
+          role: "system",
+          content: `이번 문답은 예외적으로 6문장 이내로 답변을 생성합니다.`,
+        });
+        // 검사 분야 세션 추가. 해당 세션동안 검사 결과 분석은 1회만 진행되도록 세션 데이터 설정.
+        req.session.ebt_class = random_class;
+      }
+      // 인지행동 관련 멘트 감지
+      // 인지행동 세션 데이터가 없고, 인지행동 검사 관련 멘트 감지
+      else if (
+        !req.session.cb_class &&
+        cb_solution_ment.some((el) => {
+          if (lastUserContent.includes(el.text)) {
+            testClass_cb = el.class; // 인지 분야 저장
+            return true;
+          } else return false;
+        })
+      ) {
+        // 고정 답변3 프롬프트 삽입 - 인지행동 치료 문제
+        console.log("인지행동 치료 프롬프트 삽입");
+        let cb_testArr;
+
+        // 인지행동 문항 맵핑
+        const cb_class_map = {
+          school: cb_test_school,
+          friend: cb_test_family,
+          family: cb_test_friend,
+          etc: cb_test_remain,
+        };
+
+        // 감지된 인지행동 문제 분야 선택
+        cb_testArr = cb_class_map[testClass_cb];
+        req.session.cb_class = testClass_cb;
+
+        // 랜덤 문항 1개 선택
+        const random_cb_index = Math.floor(Math.random() * cb_testArr.length);
+        const random_cb_question = cb_testArr[random_cb_index];
+        req.session.cb_question = random_cb_question;
+
+        // console.log(random_cb_question);
+
+        // 인지행동 문제 프롬프트
+        parseMessageArr.push({
+          role: "user",
+          content: `마지막 질문에 대해 1문장 이내로 답변한 뒤 (이해하지 못했으면 답변하지마), 
+          이후 '그 전에 우리 상황극 한 번 하자!' 라고 말한 뒤 다음 문단에 오는 인지행동 검사를 문제와 문항으로 나누어 user에게 제시해줘.
+
+          ${random_cb_question.question}
+
+          문항 앞에는 '1) 2) 3) 4)'같이 번호를 붙이고 점수는 제거해줘.
+          답변 마지막에 '넌 이 상황에서 어떻게 할거야? 번호로 알려줘!'를 추가해줘.
+          `,
+        });
+        promptArr.push({
+          role: "system",
+          content: `이번 문답은 예외적으로 8문장 이내로 답변을 생성합니다.`,
+        });
+      }
+      // 인지행동 세션 돌입
+      // 인지행동 세션 데이터가 있는 경우
+      else if (req.session.cb_class) {
+        // 정답을 골랐을 경우
+        if (lastUserContent.includes(req.session.cb_question.answer)) {
+          console.log("인지행동 검사 정답 선택");
+          parseMessageArr.push({
+            role: "user",
+            content: `'올바른 답을 골랐구나! 대단해!'를 말한 뒤 ${req.session.cb_question.answer}번 문항에 대한 견해를 2문장 이내로 답변해줘.`,
+          });
+
+          // 인지행동 관련 데이터 초기화
+          delete req.session.cb_class;
+          delete req.session.cb_question;
+          delete req.session.cb_wrongCnt;
+        }
+        // 오답을 고를 경우
+        else {
+          console.log("인지행동 검사 오답 선택");
+          // 오답 횟수 카운트
+          if (!req.session.cb_wrongCnt) req.session.cb_wrongCnt = 1;
+          else req.session.cb_wrongCnt++;
+
+          // 오답 횟수 4회 미만
+          if (req.session.cb_wrongCnt < 4) {
+            parseMessageArr.push({
+              role: "user",
+              content: `'user'가 고른 문항에 대한 견해를 2문장 이내로 답변한 뒤, 마지막에는 '그치만 다시 한 번 생각해봐!' 를 추가해줘.
+              (만약 문항을 고르지 않았다면 1문장 이내로 문제에 집중해달라고 'user'에게 부탁해줘. 이 때는 '그치만 다시 한 번 생각해봐!'를 추가하지마.)`,
+            });
+          }
+          // 오답 횟수 4회 이상
+          else {
+            console.log("인지행동 검사 오답 4회 이상 선택 -> 정답 알려주기");
+            parseMessageArr.push({
+              role: "user",
+              content: `'올바른 답은 ${req.session.cb_question.answer}번이였어!' 를 말한 뒤 마지막 ${req.session.cb_question.answer}번 문항에 대한 견해를 2문장 이내로 답변해줘.`,
+            });
+
+            // 인지행동 관련 데이터 초기화
+            delete req.session.cb_class;
+            delete req.session.cb_question;
+            delete req.session.cb_wrongCnt;
+          }
+        }
+      } else promptArr.push(sentence_division_prompt);
+      */
+
+      // 상시 삽입 프롬프트
+      // promptArr.push(completions_emotion_prompt); // 답변 이모션 넘버 확인 프롬프트 삽입
+
+      // console.log(promptArr);
+
+      const response = await openai.chat.completions.create({
+        messages: [...promptArr, ...parseMessageArr, ...userPrompt],
+        model: "gpt-4o", // gpt-4-turbo, gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
+      });
+
+      // let emotion = parseInt(response.choices[0].message.content.slice(-1));
+      // console.log("emotion: " + emotion);
+
+      const message = {
+        message: response.choices[0].message.content,
+        emotion: 0,
+      };
+      // 대화 내역 로그
+      // console.log([
+      //   ...parseMessageArr,
+      //   { role: "assistant", content: response.choices[0].message.content },
+      //   // response.choices[0].message.content,
+      // ]);
+
+      // 엘라 심리 분석 DB 저장
+      if (parseMessageArr.length === 11) {
+        const table = Consult_Table_Info["Analysis"].table;
+        const attribute = Consult_Table_Info["Analysis"].attribute;
+
+        // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
+        const duple_query = `INSERT INTO ${table} (${attribute.pKey}, ${attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
+          ${attribute.attr1} = VALUES(${attribute.attr1});`;
+
+        const duple_value = [parsepUid, JSON.stringify(message)];
+
+        connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
+          if (error) console.log(error);
+          else console.log("Ella Consult Analysis UPDATE Success!");
+        });
+
+        // 엘라 유저 분석 내용 Session 저장
+        req.session.ella_analysis = message.message;
+      }
+      return res.status(200).json(message);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Server Error - 500 Bad Gateway" + err.message,
+        emotion: 0,
+      });
+    }
+  },
 };
 
 module.exports = {
   openAIController,
   ellaMoodController,
-  openAIController_Regercy,
+  // openAIController_Regercy,
 };

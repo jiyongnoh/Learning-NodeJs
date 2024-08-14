@@ -16,7 +16,6 @@ const {
   postOpenAIPsychologicalAnalysis,
   postOpenAIConsultingPupu,
   postOpenAIConsultingUbi,
-  // postOpenAIConsultingLala,
   postOpenAIConsultingSoyes,
   postOpenAIMypageCalendarData,
   postClovaVoiceTTS,
