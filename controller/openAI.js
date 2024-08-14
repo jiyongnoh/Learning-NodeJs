@@ -2580,7 +2580,7 @@ Todo List가 아니라고 판단되면 제외한다.
   // 기분 훈련 저장 API
   postOpenAIMoodDataSave: async (req, res) => {
     const { data } = req.body;
-    console.log(data);
+    // console.log(data);
     let parseData, parsepUid; // Parsing 변수
 
     try {
