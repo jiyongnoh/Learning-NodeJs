@@ -182,6 +182,7 @@ const {
   ebt_analysis_prompt_v5,
   ebt_analysis_prompt_v6,
   ebt_analysis_prompt_v7,
+  ebt_analysis_prompt_v8,
   pt_analysis_prompt,
   test_prompt_20240402,
   persona_prompt_lala_v2,
@@ -522,8 +523,8 @@ const openAIController = {
       const analysisPrompt = [];
       const userPrompt = [];
 
-      // 정서행동 검사 분석가 페르소나 v7 - 0718
-      analysisPrompt.push(ebt_analysis_prompt_v7);
+      // 정서행동 검사 분석가 페르소나 v8 - 0819
+      analysisPrompt.push(ebt_analysis_prompt_v8);
       // 분야별 결과 해석 프롬프트
       analysisPrompt.push(ebt_Analysis[parsingType]);
       // 결과 해석 요청 프롬프트
