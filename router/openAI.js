@@ -18,6 +18,7 @@ const {
   postOpenAIConsultingUbi,
   postOpenAIConsultingSoyes,
   postOpenAIMypageCalendarData,
+  postOpenAIMypageData,
   postClovaVoiceTTS,
   postOpenAIPernalTestAnalysis,
   getClearCookies,
@@ -77,6 +78,8 @@ router.post("/training_mood_ella/load", postOpenAIMoodDataLoad);
 
 // 달력 데이터 반환
 router.post("/calendar", postOpenAIMypageCalendarData);
+// 마이페이지 데이터 반환
+router.post("/mypage", postOpenAIMypageData);
 // User EBT 데이터 반환
 router.post("/ebtresult", postOpenAIUserEBTResultData);
 // 상담 solution 반환

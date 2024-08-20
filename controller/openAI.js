@@ -444,10 +444,6 @@ const select_soyesAI_EbtResult_v2 = async (keyValue, contentKey, parsepUid) => {
 //   }
 // };
 
-// EBT 반영 Class 정의
-
-// AI API
-
 const openAIController = {
   // 감정 분석 AI
   postOpenAIEmotionAnalyze: async (req, res) => {
@@ -1823,9 +1819,134 @@ const openAIController = {
         }),
       });
     } catch (err) {
-      console.error(err);
-      res.json({
-        data: "Server Error",
+      console.error(err.sqlMessage);
+      res.status(500).json({
+        message: "Server Error - 500",
+      });
+    }
+  },
+  // 마이페이지 데이터 반환 API
+  postOpenAIMypageData: async (req, res) => {
+    const { EBTData } = req.body;
+    let parseEBTdata, parsepUid; // Parsing 변수
+
+    try {
+      // json 파싱
+      if (typeof EBTData === "string") {
+        parseEBTdata = JSON.parse(EBTData);
+      } else parseEBTdata = EBTData;
+
+      const { pUid } = parseEBTdata;
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.json({ message: "No pUid input value - 400" });
+      }
+      // pUid default값 설정
+      parsepUid = pUid;
+      // parseDate = date;
+
+      console.log(
+        `마이페이지 데이터 반환 API /openAI/mypage Path 호출 - pUid: ${parsepUid}`
+      );
+
+      // EBT Table Key
+      const ebt_log_table = EBT_Table_Info["All"].table;
+      const ebt_log_attribute = EBT_Table_Info["All"].attribute;
+      const { pKey, status, created_at, updated_at } = ebt_log_attribute;
+
+      // PT Table Key
+      const pt_log_table = PT_Table_Info["Log"].table;
+      const pt_log_attribute = PT_Table_Info["Log"].attribute;
+
+      // Consult Table Key
+      // const consult_log_table = Consult_Table_Info["Log"].table;
+      // const consult_log_attribute = Consult_Table_Info["Log"].attribute;
+
+      // 1. SELECT USER JOIN EBT_Log
+      const select_ebt_join_query = `SELECT ${pKey}, ${updated_at} FROM ${ebt_log_table} WHERE uid = '${parsepUid}' AND ${status} = '1' ORDER BY ${created_at} DESC LIMIT 5;`;
+
+      const ebt_join_data = await fetchUserData(
+        connection_AI,
+        select_ebt_join_query
+      );
+      // console.log(ebt_join_data);
+
+      // 2. SELECT USER PT_Log
+      const select_pt_join_query = `SELECT ${pt_log_attribute.attr2}, created_at FROM ${pt_log_table} WHERE uid = '${parsepUid}' ORDER BY created_at DESC LIMIT 5;`;
+
+      const pt_join_data = await fetchUserData(
+        connection_AI,
+        select_pt_join_query
+      );
+
+      // 3. SELECT USER Consult_Log
+      // const select_consult_join_query = `SELECT ${consult_log_table}.${consult_log_attribute.attr1}, ${consult_log_table}.${consult_log_attribute.attr2} FROM ${consult_log_table} WHERE uid = '${parsepUid}' AND created_at LIKE '${parseDate}%' ORDER BY created_at DESC;`;
+
+      // const consult_join_data = await fetchUserData(
+      //   connection_AI,
+      //   select_consult_join_query
+      // );
+
+      // 프론트 데이터값 참조
+      // const userInfoArr = [
+      //   {
+      //     title: '성격검사',
+      //     type: 'pt_data',
+      //     iconSrc: '/src/Content_IMG/Icon_IMG/Icon_요가명상.png',
+      //     playIconSrc: '/src/Content_IMG/Frame_재생버튼.png',
+      //   },
+      //   {
+      //     title: '정서행동검사',
+      //     type: 'ebt_data',
+      //     iconSrc: '/src/Content_IMG/Icon_IMG/Icon_요가명상.png',
+      //     playIconSrc: '/src/Content_IMG/Frame_재생버튼.png',
+      //   },
+      //   {
+      //     title: '심리상담',
+      //     type: 'consult_data',
+      //     iconSrc: '/src/Content_IMG/Icon_IMG/Icon_요가명상.png',
+      //     playIconSrc: '/src/Content_IMG/Frame_재생버튼.png',
+      //   },
+      //   {
+      //     title: '콘텐츠',
+      //     type: 'content_data',
+      //     iconSrc: '/src/Content_IMG/Icon_IMG/Icon_요가명상.png',
+      //     playIconSrc: '/src/Content_IMG/Frame_재생버튼.png',
+      //   },
+      //   {
+      //     title: '엘라상담',
+      //     type: 'ella_data',
+      //     iconSrc: '/src/Content_IMG/Icon_IMG/Icon_요가명상.png',
+      //     playIconSrc: '/src/Content_IMG/Frame_재생버튼.png',
+      //   },
+      //   {
+      //     title: '명상',
+      //     type: 'meditation_data',
+      //     iconSrc: '/src/Content_IMG/Icon_IMG/Icon_요가명상.png',
+      //     playIconSrc: '/src/Content_IMG/Frame_재생버튼.png',
+      //   },
+      // ];
+
+      return res.status(200).json({
+        message: "MyPage Data Access Success! - 200 OK",
+        ebt_data: ebt_join_data.map((el) => {
+          return {
+            id: el.ebt_id,
+            date: el.ebt_updated_at,
+          };
+        }),
+        pt_data: pt_join_data.map((el) => {
+          return {
+            result: el.persanl_result,
+            date: el.created_at,
+          };
+        }),
+      });
+    } catch (err) {
+      console.error(err.sqlMessage);
+      res.status(500).json({
+        message: "Server Error - 500",
       });
     }
   },
@@ -2255,196 +2376,6 @@ const openAIController = {
       res.status(500).json({ error: "Failed to process the image" });
     }
   },
-  // 기분 훈련 저장 API
-  postOpenAIMoodDataSave: async (req, res) => {
-    const { data } = req.body;
-    console.log(data);
-    let parseData, parsepUid; // Parsing 변수
-
-    try {
-      // json 파싱
-      if (typeof data === "string") {
-        parseData = JSON.parse(data);
-      } else parseData = data;
-
-      const {
-        pUid,
-        type,
-        mood_name,
-        mood_cognitive_score,
-        mood_todo_list,
-        mood_talk_list,
-      } = parseData;
-
-      // No pUid => return
-      if (!pUid) {
-        console.log("No pUid input value - 400");
-        return res.status(400).json({ message: "No pUid input value - 400" });
-      }
-
-      // No type => return
-      if (!type) {
-        console.log("No type input value - 400");
-        return res.status(400).json({ message: "No type input value - 400" });
-      }
-
-      // pUid default값 설정
-      parsepUid = pUid;
-
-      console.log(
-        `기분 훈련 저장 API /openAI/calendar Path 호출 - pUid: ${parsepUid}`
-      );
-
-      const table = Ella_Training_Table_Info["Mood"].table;
-      const attribute = Ella_Training_Table_Info["Mood"].attribute;
-
-      let update_query, update_value;
-
-      // 1. SELECT User Mood Table Data
-      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
-      const select_data = await fetchUserData(connection_AI, select_query);
-
-      // console.log(select_data[0]);
-
-      // TODO - Mood Table INSERT || UPDATE
-
-      // 타입별 query, value 삽입
-      switch (type) {
-        case "first":
-          const insert_query = `INSERT INTO ${table} (${attribute.fKey}, ${attribute.attr1}, ${attribute.attr2}, ${attribute.attr3}, ${attribute.attr6}) VALUES (?, ?, ?, ?, ?);`;
-          console.log(insert_query);
-          const insert_value = [
-            parsepUid,
-            1,
-            mood_name,
-            mood_cognitive_score,
-            "Ella",
-          ];
-          console.log(insert_value);
-          if (false) {
-            connection_AI.query(
-              insert_query,
-              insert_value,
-              (error, rows, fields) => {
-                if (error) console.log(error);
-                else console.log("Mood First Insert Success!");
-              }
-            );
-          }
-          break;
-        case "second":
-          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr4} = ? WHERE ${attribute.pKey} = ?`;
-          console.log(update_query);
-          update_value = [
-            2,
-            JSON.stringify(mood_todo_list),
-            select_data[0].mood_idx,
-          ];
-          console.log(update_value);
-          connection_AI.query(
-            update_query,
-            update_value,
-            (error, rows, fields) => {
-              if (error) console.log(error);
-              else console.log("Mood Second Update Success!");
-            }
-          );
-          break;
-        case "third":
-          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr5} = ? WHERE ${attribute.pKey} = ?`;
-          console.log(update_query);
-          update_value = [
-            3,
-            JSON.stringify(mood_talk_list),
-            select_data[0].mood_idx,
-          ];
-          console.log(update_value);
-          connection_AI.query(
-            update_query,
-            update_value,
-            (error, rows, fields) => {
-              if (error) console.log(error);
-              else console.log("Mood Third Update Success!");
-            }
-          );
-          break;
-        case "fourth":
-          update_query = `UPDATE ${table} SET ${attribute.attr1} = ? WHERE ${attribute.pKey} = ?`;
-          console.log(update_query);
-          update_value = [4, select_data[0].mood_idx];
-          console.log(update_value);
-          connection_AI.query(
-            update_query,
-            update_value,
-            (error, rows, fields) => {
-              if (error) console.log(error);
-              else console.log("Mood Fourth Update Success!");
-            }
-          );
-          break;
-      }
-      return res.json({ message: "Mood Data Save Success!" });
-    } catch (err) {
-      console.error(err);
-      res.json({
-        message: "Server Error",
-      });
-    }
-  },
-  // 기분 훈련 데이터 Load API
-  postOpenAIMoodDataLoad: async (req, res) => {
-    const { data } = req.body;
-    // console.log(data);
-    let parseData, parsepUid; // Parsing 변수
-
-    try {
-      // json 파싱
-      if (typeof data === "string") {
-        parseData = JSON.parse(data);
-      } else parseData = data;
-
-      const { pUid } = parseData;
-
-      // No pUid => return
-      if (!pUid) {
-        console.log("No pUid input value - 400");
-        return res.status(400).json({ message: "No pUid input value - 400" });
-      }
-
-      // pUid default값 설정
-      parsepUid = pUid;
-
-      console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
-
-      // TODO - Mood Table Select
-      if (false) {
-        // Mood Table 명시
-        const table = Ella_Training_Table_Info["Mood"].table;
-        const attribute = Ella_Training_Table_Info["Mood"].attribute;
-        // Mood Table User 조회
-        const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
-        const select_data = await fetchUserData(connection_AI, select_query);
-        // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
-        if (!select_data[0] || select_data[0].mood_round_idx === 4)
-          return res.json({ mood_round_idx: 0, mood_name: "" });
-        // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
-        else {
-          return res.json({
-            mood_round_idx: select_data[0].mood_round_idx,
-            mood_name: select_data[0].mood_name,
-          });
-        }
-      }
-
-      // dummy data (임시)
-      return res.json({ mood_round_idx: 0, mood_name: "" });
-    } catch (err) {
-      console.error(err);
-      res.json({
-        message: "Server Error",
-      });
-    }
-  },
 };
 
 const ellaMoodController = {
@@ -2785,7 +2716,7 @@ Todo List가 아니라고 판단되면 제외한다.
 };
 
 const openAIController_Regercy = {
-  // (Regercy) 자율 상담 AI
+  // (Legacy) 자율 상담 AI
   postOpenAIChattingNew: async (req, res) => {
     const { messageArr } = req.body;
     console.log("자율 상담 API /message Path 호출");
@@ -2830,7 +2761,7 @@ const openAIController_Regercy = {
       res.json(err);
     }
   },
-  // (Regercy) 테스트 결과 기반 상담 AI. 성격 검사
+  // (Legacy) 테스트 결과 기반 상담 AI. 성격 검사
   postOpenAIPersnalTestResultConsulting: async (req, res) => {
     const { messageArr, testResult } = req.body;
     console.log("성격 검사 반영 API /consulting_persnal Path 호출");
@@ -2885,7 +2816,7 @@ const openAIController_Regercy = {
       res.send(err);
     }
   },
-  // (Regercy) 테스트 결과 기반 상담 AI. 정서행동 검사 - 학교생활 V1
+  // (Legacy) 테스트 결과 기반 상담 AI. 정서행동 검사 - 학교생활 V1
   postOpenAIEmotionTestResultConsulting: async (req, res) => {
     const { messageArr } = req.body;
     // console.log("anxiety_depression");
@@ -2960,7 +2891,7 @@ const openAIController_Regercy = {
       res.send(err);
     }
   },
-  // (Regercy) 테스트 결과 기반 상담 AI. 정서행동 검사 - 학교생활 V2
+  // (Legacy) 테스트 결과 기반 상담 AI. 정서행동 검사 - 학교생활 V2
   postOpenAIEmotionTestResultConsultingV2: async (req, res) => {
     const { messageArr, pUid } = req.body;
     console.log(
@@ -3090,7 +3021,7 @@ const openAIController_Regercy = {
       res.json(err);
     }
   },
-  // (Regercy) 테스트 결과 기반 상담 AI. 정서행동, 성격검사, 진로검사 - V1 (박사님 프롬프트)
+  // (Legacy) 테스트 결과 기반 상담 AI. 정서행동, 성격검사, 진로검사 - V1 (박사님 프롬프트)
   postOpenAITestResultConsultingV1: async (req, res) => {
     const { EBTData } = req.body;
 
@@ -3242,7 +3173,7 @@ const openAIController_Regercy = {
       });
     }
   },
-  // (Regercy) 정서멘토 모델 - 엘라
+  // (Legacy) 정서멘토 모델 - 엘라
   postOpenAIConsultingLala_v1: async (req, res) => {
     const { EBTData } = req.body;
     // console.log(EBTData);
@@ -3536,7 +3467,7 @@ const openAIController_Regercy = {
       });
     }
   },
-  // (Regercy) 정서멘토 모델 - 엘라
+  // (Legacy) 정서멘토 모델 - 엘라
   postOpenAIConsultingLala_v2: async (req, res) => {
     const { EBTData } = req.body;
     // console.log(EBTData);
@@ -3908,6 +3839,196 @@ const openAIController_Regercy = {
       return res.status(500).json({
         message: "Server Error - 500 Bad Gateway" + err.message,
         emotion: 0,
+      });
+    }
+  },
+  // (Legacy) 기분 훈련 저장 API
+  postOpenAIMoodDataSave: async (req, res) => {
+    const { data } = req.body;
+    console.log(data);
+    let parseData, parsepUid; // Parsing 변수
+
+    try {
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const {
+        pUid,
+        type,
+        mood_name,
+        mood_cognitive_score,
+        mood_todo_list,
+        mood_talk_list,
+      } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+
+      // No type => return
+      if (!type) {
+        console.log("No type input value - 400");
+        return res.status(400).json({ message: "No type input value - 400" });
+      }
+
+      // pUid default값 설정
+      parsepUid = pUid;
+
+      console.log(
+        `기분 훈련 저장 API /openAI/calendar Path 호출 - pUid: ${parsepUid}`
+      );
+
+      const table = Ella_Training_Table_Info["Mood"].table;
+      const attribute = Ella_Training_Table_Info["Mood"].attribute;
+
+      let update_query, update_value;
+
+      // 1. SELECT User Mood Table Data
+      const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+      const select_data = await fetchUserData(connection_AI, select_query);
+
+      // console.log(select_data[0]);
+
+      // TODO - Mood Table INSERT || UPDATE
+
+      // 타입별 query, value 삽입
+      switch (type) {
+        case "first":
+          const insert_query = `INSERT INTO ${table} (${attribute.fKey}, ${attribute.attr1}, ${attribute.attr2}, ${attribute.attr3}, ${attribute.attr6}) VALUES (?, ?, ?, ?, ?);`;
+          console.log(insert_query);
+          const insert_value = [
+            parsepUid,
+            1,
+            mood_name,
+            mood_cognitive_score,
+            "Ella",
+          ];
+          console.log(insert_value);
+          if (false) {
+            connection_AI.query(
+              insert_query,
+              insert_value,
+              (error, rows, fields) => {
+                if (error) console.log(error);
+                else console.log("Mood First Insert Success!");
+              }
+            );
+          }
+          break;
+        case "second":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr4} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [
+            2,
+            JSON.stringify(mood_todo_list),
+            select_data[0].mood_idx,
+          ];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Second Update Success!");
+            }
+          );
+          break;
+        case "third":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ?, ${attribute.attr5} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [
+            3,
+            JSON.stringify(mood_talk_list),
+            select_data[0].mood_idx,
+          ];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Third Update Success!");
+            }
+          );
+          break;
+        case "fourth":
+          update_query = `UPDATE ${table} SET ${attribute.attr1} = ? WHERE ${attribute.pKey} = ?`;
+          console.log(update_query);
+          update_value = [4, select_data[0].mood_idx];
+          console.log(update_value);
+          connection_AI.query(
+            update_query,
+            update_value,
+            (error, rows, fields) => {
+              if (error) console.log(error);
+              else console.log("Mood Fourth Update Success!");
+            }
+          );
+          break;
+      }
+      return res.json({ message: "Mood Data Save Success!" });
+    } catch (err) {
+      console.error(err);
+      res.json({
+        message: "Server Error",
+      });
+    }
+  },
+  // (Legacy) 기분 훈련 데이터 Load API
+  postOpenAIMoodDataLoad: async (req, res) => {
+    const { data } = req.body;
+    // console.log(data);
+    let parseData, parsepUid; // Parsing 변수
+
+    try {
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { pUid } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+
+      // pUid default값 설정
+      parsepUid = pUid;
+
+      console.log(`기분 훈련 Data Load API 호출 - pUid: ${parsepUid}`);
+
+      // TODO - Mood Table Select
+      if (false) {
+        // Mood Table 명시
+        const table = Ella_Training_Table_Info["Mood"].table;
+        const attribute = Ella_Training_Table_Info["Mood"].attribute;
+        // Mood Table User 조회
+        const select_query = `SELECT * FROM ${table} WHERE ${attribute.fKey} = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+        const select_data = await fetchUserData(connection_AI, select_query);
+        // case.1 - Row가 없거나 mood_round_idx값이 4일 경우: 기분관리 프로그램을 시작하는 인원. { mood_round_idx: 0, mood_name: "" } 반환
+        if (!select_data[0] || select_data[0].mood_round_idx === 4)
+          return res.json({ mood_round_idx: 0, mood_name: "" });
+        // case.2 - Row가 있을 경우: 기분관리 프로그램을 진행했던 인원. { mood_round_idx: data.mood_round_idx, mood_name: data.mood_name } 반환
+        else {
+          return res.json({
+            mood_round_idx: select_data[0].mood_round_idx,
+            mood_name: select_data[0].mood_name,
+          });
+        }
+      }
+
+      // dummy data (임시)
+      return res.json({ mood_round_idx: 0, mood_name: "" });
+    } catch (err) {
+      console.error(err);
+      res.json({
+        message: "Server Error",
       });
     }
   },
