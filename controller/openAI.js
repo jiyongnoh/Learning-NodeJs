@@ -470,6 +470,14 @@ const openAIController = {
         return res.status(400).json({ message: "No type input value - 400" });
       }
 
+      // type값이 EBT_classArr에 속하지 않을 경우
+      if (!EBT_classArr.includes(type)) {
+        console.log("type is not includes EBT_classArr - 404");
+        return res
+          .status(404)
+          .json({ message: "type is not includes EBT_classArr - 404" });
+      }
+
       // No pUid => return
       if (!pUid) {
         console.log("No pUid input value - 400");
@@ -508,7 +516,7 @@ const openAIController = {
 
       // T점수 계산
       const scoreSum = parsingScore.reduce((acc, cur) => acc + cur);
-      const aver = [parsingType].average;
+      const aver = EBT_Table_Info[parsingType].average;
       const stand = EBT_Table_Info[parsingType].standard;
       const tScore = (((scoreSum - aver) / stand) * 10 + 50).toFixed(2);
       // 검사 결과
@@ -607,40 +615,30 @@ const openAIController = {
       // 검사 결과가 갱신 되었기에 정서 결과 세션 삭제
       delete req.session.psy_testResult_promptArr_last;
 
-      /* DB 저장 */
-      if (parsingType) {
-        /* TODO# New EBT Table SQL 변경 예정 */
-        const table = EBT_Table_Info[parsingType].table;
-        const attribute = EBT_Table_Info[parsingType].attribute;
-        // 오늘 날짜 변환
-        const dateObj = new Date();
-        const year = dateObj.getFullYear();
-        const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
-        const day = ("0" + dateObj.getDate()).slice(-2);
-        const date = `${year}-${month}-${day}`;
+      /* 2024-08-20 - new DB 저장 */
+      if (true) {
+        const table = EBT_Table_Info["All"].table;
+        const { cKey, analysis, score, status, created_at } =
+          EBT_Table_Info["All"].attribute;
 
         // soyes_ai_Ebt Table 삽입
         // 1. SELECT TEST (row가 있는지 없는지 검사)
-        const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`;
+        const select_query = `SELECT ${status} FROM ${table} WHERE uid ='${parsepUid}' ORDER BY ${created_at} DESC LIMIT 1`;
         const ebt_data = await fetchUserData(connection_AI, select_query);
 
-        // 2. UPDATE TEST (row값이 있는 경우 실행)
-        if (ebt_data[0]) {
-          const update_query = `UPDATE ${table} SET ${Object.values(attribute)
-            .filter((el) => el !== "uid")
-            .map((el) => {
-              return `${el} = ?`;
-            })
-            .join(", ")} WHERE ${attribute.pKey} = ?`;
+        // console.log(ebt_data[0]);
+
+        // 2. UPDATE TEST
+        if (ebt_data[0] && !ebt_data[0][status]) {
+          const update_query = `UPDATE ${table} SET ${analysis[type]}=?, ${score[type]}=?, ${status}=? WHERE ${cKey} = ?`;
           // console.log(update_query);
 
           const update_value = [
-            ...parsingScore,
-            JSON.stringify({ ...mailOptions, date }),
-            date,
+            analyzeMsg,
+            parsingScore.join("/"),
+            type === "Self" ? 1 : 0,
             parsepUid,
           ];
-
           // console.log(update_value);
 
           connection_AI.query(
@@ -652,21 +650,12 @@ const openAIController = {
             }
           );
         }
-        // 3. INSERT TEST (row값이 없는 경우 실행)
+        // 3. INSERT TEST
         else {
-          const insert_query = `INSERT INTO ${table} (${Object.values(
-            attribute
-          ).join(", ")}) VALUES (${Object.values(attribute)
-            .map((el) => "?")
-            .join(", ")})`;
+          const insert_query = `INSERT INTO ${table} (${cKey}, ${analysis[type]}, ${score[type]}) VALUES (?, ?, ?)`;
           // console.log(insert_query);
 
-          const insert_value = [
-            parsepUid,
-            ...parsingScore,
-            JSON.stringify({ ...mailOptions, date }),
-            date,
-          ];
+          const insert_value = [parsepUid, analyzeMsg, parsingScore.join("/")];
           // console.log(insert_value);
 
           connection_AI.query(
@@ -678,161 +667,125 @@ const openAIController = {
             }
           );
         }
-
-        // soyes_ai_Ebt_Log Table 삽입
-        const table_log = EBT_Table_Info["Log"].table; // 해당 table은 soyes_ai_User table과 외래키로 연결된 상태
-        const attribute_log = EBT_Table_Info["Log"].attribute;
-
-        const log_insert_query = `INSERT INTO ${table_log} (${Object.values(
-          attribute_log
-        ).join(", ")}) VALUES (${Object.values(attribute_log)
-          .map((el) => "?")
-          .join(", ")})`;
-        // console.log(insert_query);
-
-        const log_insert_value = [
-          parsepUid,
-          date,
-          JSON.stringify({ ...mailOptions, date }),
-          type,
-          tScore,
-        ];
-        // console.log(insert_value);
-
-        connection_AI.query(log_insert_query, log_insert_value, (err) => {
-          if (err) {
-            console.log("AI Analysis Data LOG DB INSERT Fail!");
-            console.log("Err sqlMessage: " + err.sqlMessage);
-          } else console.log("AI Analysis Data LOG DB INSERT Success!");
-        });
-
-        // Todo => soyes_ai_Ebt_Result row 저장
-
-        // const ebt_result_table = Consult_Table_Info["Analysis"].table;
-        // const ebt_result_attribute = Consult_Table_Info["Analysis"].attribute;
-
-        // // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
-        // const duple_query = `INSERT INTO ${ebt_result_table} (${ebt_result_attribute.pKey}, ${ebt_result_attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
-        //   ${ebt_result_attribute.attr1} = VALUES(${ebt_result_attribute.attr1});`;
-
-        // const duple_value = [parsepUid, JSON.stringify(message)];
-
-        // connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
-        //   if (error) console.log(error);
-        //   else console.log("Ella Consult Analysis UPDATE Success!");
-        // });
       }
 
-      /* TODO# 2024-08-12 - new DB 저장 */
-      if (false) {
-        /* TODO# New EBT Table SQL 변경 예정 */
-        const table = "soyes_ai_EBT";
+      /* DB 저장 (구) */
+      // if (false) {
+      //   /* TODO# New EBT Table SQL 변경 예정 */
+      //   const table = EBT_Table_Info[parsingType].table;
+      //   const attribute = EBT_Table_Info[parsingType].attribute;
+      //   // 오늘 날짜 변환
+      //   const dateObj = new Date();
+      //   const year = dateObj.getFullYear();
+      //   const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+      //   const day = ("0" + dateObj.getDate()).slice(-2);
+      //   const date = `${year}-${month}-${day}`;
 
-        // soyes_ai_Ebt Table 삽입
-        // 1. SELECT TEST (row가 있는지 없는지 검사)
-        const select_query = `SELECT * FROM ${table} WHERE uid ='${parsepUid}' LIMIT 1`;
-        const ebt_data = await fetchUserData(connection_AI, select_query);
+      //   // soyes_ai_Ebt Table 삽입
+      //   // 1. SELECT TEST (row가 있는지 없는지 검사)
+      //   const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`;
+      //   const ebt_data = await fetchUserData(connection_AI, select_query);
 
-        // 2. UPDATE TEST (row값이 있는 경우 실행)
-        if (ebt_data[0]) {
-          const update_query = `UPDATE ${table} SET ${Object.values(attribute)
-            .filter((el) => el !== "uid")
-            .map((el) => {
-              return `${el} = ?`;
-            })
-            .join(", ")} WHERE ${attribute.pKey} = ?`;
-          // console.log(update_query);
+      //   // 2. UPDATE TEST (row값이 있는 경우 실행)
+      //   if (ebt_data[0]) {
+      //     const update_query = `UPDATE ${table} SET ${Object.values(attribute)
+      //       .filter((el) => el !== "uid")
+      //       .map((el) => {
+      //         return `${el} = ?`;
+      //       })
+      //       .join(", ")} WHERE ${attribute.pKey} = ?`;
+      //     // console.log(update_query);
 
-          const update_value = [
-            ...parsingScore,
-            JSON.stringify({ ...mailOptions, date }),
-            date,
-            parsepUid,
-          ];
+      //     const update_value = [
+      //       ...parsingScore,
+      //       JSON.stringify({ ...mailOptions, date }),
+      //       date,
+      //       parsepUid,
+      //     ];
 
-          // console.log(update_value);
+      //     // console.log(update_value);
 
-          connection_AI.query(
-            update_query,
-            update_value,
-            (error, rows, fields) => {
-              if (error) console.log(error);
-              else console.log("AI Analysis Data DB UPDATE Success!");
-            }
-          );
-        }
-        // 3. INSERT TEST (row값이 없는 경우 실행)
-        else {
-          const insert_query = `INSERT INTO ${table} (${Object.values(
-            attribute
-          ).join(", ")}) VALUES (${Object.values(attribute)
-            .map((el) => "?")
-            .join(", ")})`;
-          // console.log(insert_query);
+      //     connection_AI.query(
+      //       update_query,
+      //       update_value,
+      //       (error, rows, fields) => {
+      //         if (error) console.log(error);
+      //         else console.log("AI Analysis Data DB UPDATE Success!");
+      //       }
+      //     );
+      //   }
+      //   // 3. INSERT TEST (row값이 없는 경우 실행)
+      //   else {
+      //     const insert_query = `INSERT INTO ${table} (${Object.values(
+      //       attribute
+      //     ).join(", ")}) VALUES (${Object.values(attribute)
+      //       .map((el) => "?")
+      //       .join(", ")})`;
+      //     // console.log(insert_query);
 
-          const insert_value = [
-            parsepUid,
-            ...parsingScore,
-            JSON.stringify({ ...mailOptions, date }),
-            date,
-          ];
-          // console.log(insert_value);
+      //     const insert_value = [
+      //       parsepUid,
+      //       ...parsingScore,
+      //       JSON.stringify({ ...mailOptions, date }),
+      //       date,
+      //     ];
+      //     // console.log(insert_value);
 
-          connection_AI.query(
-            insert_query,
-            insert_value,
-            (error, rows, fields) => {
-              if (error) console.log(error);
-              else console.log("AI Analysis Data DB INSERT Success!");
-            }
-          );
-        }
+      //     connection_AI.query(
+      //       insert_query,
+      //       insert_value,
+      //       (error, rows, fields) => {
+      //         if (error) console.log(error);
+      //         else console.log("AI Analysis Data DB INSERT Success!");
+      //       }
+      //     );
+      //   }
 
-        // soyes_ai_Ebt_Log Table 삽입
-        const table_log = EBT_Table_Info["Log"].table; // 해당 table은 soyes_ai_User table과 외래키로 연결된 상태
-        const attribute_log = EBT_Table_Info["Log"].attribute;
+      //   // soyes_ai_Ebt_Log Table 삽입
+      //   const table_log = EBT_Table_Info["Log"].table; // 해당 table은 soyes_ai_User table과 외래키로 연결된 상태
+      //   const attribute_log = EBT_Table_Info["Log"].attribute;
 
-        const log_insert_query = `INSERT INTO ${table_log} (${Object.values(
-          attribute_log
-        ).join(", ")}) VALUES (${Object.values(attribute_log)
-          .map((el) => "?")
-          .join(", ")})`;
-        // console.log(insert_query);
+      //   const log_insert_query = `INSERT INTO ${table_log} (${Object.values(
+      //     attribute_log
+      //   ).join(", ")}) VALUES (${Object.values(attribute_log)
+      //     .map((el) => "?")
+      //     .join(", ")})`;
+      //   // console.log(insert_query);
 
-        const log_insert_value = [
-          parsepUid,
-          date,
-          JSON.stringify({ ...mailOptions, date }),
-          type,
-          tScore,
-        ];
-        // console.log(insert_value);
+      //   const log_insert_value = [
+      //     parsepUid,
+      //     date,
+      //     JSON.stringify({ ...mailOptions, date }),
+      //     type,
+      //     tScore,
+      //   ];
+      //   // console.log(insert_value);
 
-        connection_AI.query(log_insert_query, log_insert_value, (err) => {
-          if (err) {
-            console.log("AI Analysis Data LOG DB INSERT Fail!");
-            console.log("Err sqlMessage: " + err.sqlMessage);
-          } else console.log("AI Analysis Data LOG DB INSERT Success!");
-        });
+      //   connection_AI.query(log_insert_query, log_insert_value, (err) => {
+      //     if (err) {
+      //       console.log("AI Analysis Data LOG DB INSERT Fail!");
+      //       console.log("Err sqlMessage: " + err.sqlMessage);
+      //     } else console.log("AI Analysis Data LOG DB INSERT Success!");
+      //   });
 
-        // Todo => soyes_ai_Ebt_Result row 저장
+      //   // Todo => soyes_ai_Ebt_Result row 저장
 
-        // const ebt_result_table = Consult_Table_Info["Analysis"].table;
-        // const ebt_result_attribute = Consult_Table_Info["Analysis"].attribute;
+      //   // const ebt_result_table = Consult_Table_Info["Analysis"].table;
+      //   // const ebt_result_attribute = Consult_Table_Info["Analysis"].attribute;
 
-        // // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
-        // const duple_query = `INSERT INTO ${ebt_result_table} (${ebt_result_attribute.pKey}, ${ebt_result_attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
-        //   ${ebt_result_attribute.attr1} = VALUES(${ebt_result_attribute.attr1});`;
+      //   // // DB에 Row가 없을 경우 INSERT, 있으면 지정한 속성만 UPDATE
+      //   // const duple_query = `INSERT INTO ${ebt_result_table} (${ebt_result_attribute.pKey}, ${ebt_result_attribute.attr1}) VALUES (?, ?) ON DUPLICATE KEY UPDATE
+      //   //   ${ebt_result_attribute.attr1} = VALUES(${ebt_result_attribute.attr1});`;
 
-        // const duple_value = [parsepUid, JSON.stringify(message)];
+      //   // const duple_value = [parsepUid, JSON.stringify(message)];
 
-        // connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
-        //   if (error) console.log(error);
-        //   else console.log("Ella Consult Analysis UPDATE Success!");
-        // });
-      }
+      //   // connection_AI.query(duple_query, duple_value, (error, rows, fields) => {
+      //   //   if (error) console.log(error);
+      //   //   else console.log("Ella Consult Analysis UPDATE Success!");
+      //   // });
+      // }
     } catch (err) {
-      console.log(err);
+      console.log(err.sqlMessage);
       res.status(500).json({ message: "Server Error - 500 Bad Gateway" });
     }
   },

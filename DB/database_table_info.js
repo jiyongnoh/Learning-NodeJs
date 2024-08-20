@@ -288,6 +288,41 @@ const EBT_Table_Info = {
       attr4: "ebt_tScore",
     },
   },
+  All: {
+    table: "soyes_ai_EBT",
+    attribute: {
+      cKey: "uid",
+      analysis: {
+        School: "ebt_school_analysis",
+        Friend: "ebt_friend_analysis",
+        Family: "ebt_family_analysis",
+        Mood: "ebt_mood_analysis",
+        Unrest: "ebt_unrest_analysis",
+        Sad: "ebt_sad_analysis",
+        Health: "ebt_health_analysis",
+        Attention: "ebt_attention_analysis",
+        Movement: "ebt_movement_analysis",
+        Angry: "ebt_angry_analysis",
+        Self: "ebt_self_analysis",
+      },
+      score: {
+        School: "ebt_school_score",
+        Friend: "ebt_friend_score",
+        Family: "ebt_family_score",
+        Mood: "ebt_mood_score",
+        Unrest: "ebt_unrest_score",
+        Sad: "ebt_sad_score",
+        Health: "ebt_health_score",
+        Attention: "ebt_attention_score",
+        Movement: "ebt_movement_score",
+        Angry: "ebt_angry_score",
+        Self: "ebt_self_score",
+      },
+      status: "ebt_full_status",
+      created_at: "ebt_created_at",
+      updated_at: "ebt_updated_at",
+    },
+  },
 };
 const PT_Table_Info = {
   Main: {
