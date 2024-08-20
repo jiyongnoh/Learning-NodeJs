@@ -291,6 +291,7 @@ const EBT_Table_Info = {
   All: {
     table: "soyes_ai_EBT",
     attribute: {
+      pKey: "ebt_id",
       cKey: "uid",
       analysis: {
         School: "ebt_school_analysis",

@@ -224,155 +224,6 @@ const {
   Ella_Training_Table_Info,
 } = require("../DB/database_table_info");
 
-// User 정서행동 2점문항 반환 (String)
-const select_soyes_AI_Ebt_Table = async (
-  user_table,
-  user_attr,
-  ebt_Question,
-  parsepUid
-) => {
-  try {
-    // console.log(user_table);
-    const select_query = `SELECT * FROM ${user_table} WHERE ${user_attr.pKey}='${parsepUid}'`; // Select Query
-    const ebt_school_data = await fetchUserData(connection_AI, select_query);
-    // console.log(ebt_school_data[0]);
-    // ebt_school_data[0]
-    //   ? console.log(`${parsepUid} 계정은 존재합니다`)
-    //   : console.log(`${parsepUid} 계정은 없습니다`);
-    // delete ebt_school_data[0].uid; // uid 속성 삭제
-    // Attribute의 값이 2인 요소의 배열 필터링. select 값이 없으면
-
-    const problem_attr_arr = ebt_school_data[0]
-      ? Object.keys(ebt_school_data[0])
-      : [];
-
-    const problem_attr_nameArr = problem_attr_arr.filter(
-      // 속성명이 question을 가지고있고, 해당 속성의 값이 2인 경우 filtering
-      (el) => el.includes("question") && ebt_school_data[0][el] === 2
-    );
-    // console.log(problem_attr_nameArr);
-
-    // 문답 개수에 따른 시나리오 문답 투척
-    // Attribute의 값이 2인 요소가 없는 경우
-    return problem_attr_nameArr.length === 0
-      ? { testResult: "", ebt_school_data }
-      : {
-          testResult: problem_attr_nameArr
-            .map((el) => ebt_Question[el])
-            .join("\n"),
-          ebt_school_data,
-        };
-  } catch (err) {
-    console.log(err);
-    return { testResult: "", ebt_school_data: {} };
-  }
-};
-// TODO# New EBT Table 갱신 후 변경 예정
-const select_soyes_AI_Ebt_Result = async (inputTable, parsepUid) => {
-  // 동기식 DB 접근 함수 1. Promise 생성 함수
-  try {
-    const {
-      table, // 조회할 EBT table (11개 Class)
-      attribute, // table Attribute
-      danger_score, // 위험 판단 점수
-      caution_score,
-      average,
-      standard,
-    } = inputTable;
-
-    const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`; // Select Query
-    const ebt_data = await fetchUserData(connection_AI, select_query);
-    // console.log(ebt_data[0]);
-
-    // 검사를 진행하지 않은 경우
-    if (!ebt_data[0])
-      return {
-        testStatus: false,
-        scoreSum: 99,
-        tScore: 999.99,
-        result: "NonTesting",
-        content: "검사를 진행하지 않았구나!",
-      };
-
-    // 검사 스코어 합 + T점수 계산
-    const scoreSum = Object.values(ebt_data[0])
-      .filter((el) => typeof el === "number")
-      .reduce((acc, cur) => acc + cur);
-    const tScore = (((scoreSum - average) / standard) * 10 + 50).toFixed(2);
-    // 검사 결과
-    const result =
-      danger_score <= scoreSum
-        ? "경고"
-        : caution_score <= scoreSum
-        ? "주의"
-        : "양호";
-    // console.log("scoreSum: " + scoreSum);
-    // console.log("tScore: " + tScore);
-    // console.log("chat: " + ebt_data[0].chat);
-
-    // danger_score 보다 높으면 "위험", 아니면 "그외" 반환
-    return {
-      testStatus: true,
-      scoreSum,
-      tScore: Number(tScore),
-      result,
-      content: JSON.parse(ebt_data[0].chat).text,
-    };
-  } catch (err) {
-    console.log(err);
-    return "Error";
-  }
-};
-// TODO# User 정서행동 결과 분석 반환. 로직 변경 예정
-const select_soyes_AI_Ebt_Analyis = async (inputTable, parsepUid) => {
-  // 동기식 DB 접근 함수 1. Promise 생성 함수
-  try {
-    const {
-      ebtClass,
-      table, // 조회할 EBT table
-      attribute, // table Attribute
-    } = inputTable;
-
-    const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`; // Select Query
-    const ebt_data = await fetchUserData(connection_AI, select_query);
-    // console.log(ebt_data[0]);
-
-    // 검사를 진행하지 않은 경우
-    if (!ebt_data[0])
-      return {
-        ebtClass: "NonTesting",
-        analyisResult: "NonTesting",
-      };
-    const analyisResult = JSON.parse(ebt_data[0].chat).text;
-    // console.log("chat: " + chat);
-
-    return {
-      ebtClass,
-      analyisResult,
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      analyisResult: "select_soyes_AI_Ebt_Analyis Error",
-    };
-  }
-};
-// User 성격 검사 유형 반환 (String)
-const select_soyes_AI_Pt_Table = async (user_table, user_attr, parsepUid) => {
-  try {
-    // console.log(user_table);
-    const select_query = `SELECT * FROM ${user_table} WHERE ${user_attr.pKey}='${parsepUid}'`; // Select Query
-    const ebt_school_data = await fetchUserData(connection_AI, select_query);
-    // console.log(ebt_school_data[0]);
-
-    return ebt_school_data[0] ? ebt_school_data[0].persanl_result : "default";
-  } catch (err) {
-    console.log(err);
-    return "default";
-  }
-};
-
-// EBT 반영 Class 정의
 const EBT_classArr = [
   "School",
   "Friend",
@@ -387,7 +238,216 @@ const EBT_classArr = [
   "Self",
 ];
 
+// New EBT Result Select Method
+const select_soyesAI_EbtResult_v2 = async (keyValue, contentKey, parsepUid) => {
+  try {
+    // New EBT Table
+    const table = EBT_Table_Info["All"].table;
+    const { pKey, cKey, status, created_at, analysis, score } =
+      EBT_Table_Info["All"].attribute;
+
+    // 조건부 Select Query
+    const select_query = keyValue
+      ? `SELECT * FROM ${table} WHERE (${pKey} ='${keyValue}' AND ${status}='1')` // keyValue 값으로 조회하는 경우
+      : `SELECT * FROM ${table} WHERE (${cKey} ='${parsepUid}' AND ${status}='1') ORDER BY ${created_at} DESC LIMIT 1`; // 가장 최근 검사 결과를 조회하는 경우
+
+    // const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`; // Select Query
+    const ebt_data = await fetchUserData(connection_AI, select_query);
+    // console.log(ebt_data[0]);
+
+    // 검사를 진행하지 않은 경우
+    if (!ebt_data[0]) return [];
+
+    // tScore 계산 + 검사 결과 +
+    const resultArr = EBT_classArr.map((type) => {
+      const { average, standard, danger_score, caution_score } =
+        EBT_Table_Info[type];
+      // 검사 스코어 합 + T점수 계산
+      const scoreSum = ebt_data[0][score[type]]
+        .split("/")
+        .reduce((acc, cur) => Number(acc) + Number(cur));
+      const tScore = (((scoreSum - average) / standard) * 10 + 50).toFixed(2);
+      // 검사 결과
+      const result =
+        danger_score <= scoreSum
+          ? "경고"
+          : caution_score <= scoreSum
+          ? "주의"
+          : "양호";
+
+      return {
+        ebt_class: type,
+        testStatus: true,
+        scoreSum,
+        tScore: Number(tScore),
+        result,
+        content: contentKey ? ebt_data[0][analysis[type]] : "",
+      };
+    });
+
+    // console.log(resultArr);
+
+    return resultArr;
+  } catch (err) {
+    console.log(err);
+    return "Error";
+  }
+};
+
+// (구) EBT Result Select Method
+// const select_soyes_AI_Ebt_Result = async (inputTable, parsepUid) => {
+//   // 동기식 DB 접근 함수 1. Promise 생성 함수
+//   try {
+//     const {
+//       table, // 조회할 EBT table (11개 Class)
+//       attribute, // table Attribute
+//       danger_score, // 위험 판단 점수
+//       caution_score,
+//       average,
+//       standard,
+//     } = inputTable;
+
+//     const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`; // Select Query
+//     const ebt_data = await fetchUserData(connection_AI, select_query);
+//     // console.log(ebt_data[0]);
+
+//     // 검사를 진행하지 않은 경우
+//     if (!ebt_data[0])
+//       return {
+//         testStatus: false,
+//         scoreSum: 99,
+//         tScore: 999.99,
+//         result: "NonTesting",
+//         content: "검사를 진행하지 않았구나!",
+//       };
+
+//     // 검사 스코어 합 + T점수 계산
+//     const scoreSum = Object.values(ebt_data[0])
+//       .filter((el) => typeof el === "number")
+//       .reduce((acc, cur) => acc + cur);
+//     const tScore = (((scoreSum - average) / standard) * 10 + 50).toFixed(2);
+//     // 검사 결과
+//     const result =
+//       danger_score <= scoreSum
+//         ? "경고"
+//         : caution_score <= scoreSum
+//         ? "주의"
+//         : "양호";
+//     // console.log("scoreSum: " + scoreSum);
+//     // console.log("tScore: " + tScore);
+//     // console.log("chat: " + ebt_data[0].chat);
+
+//     // danger_score 보다 높으면 "위험", 아니면 "그외" 반환
+//     return {
+//       testStatus: true,
+//       scoreSum,
+//       tScore: Number(tScore),
+//       result,
+//       content: JSON.parse(ebt_data[0].chat).text,
+//     };
+//   } catch (err) {
+//     console.log(err);
+//     return "Error";
+//   }
+// };
+
+// User 정서행동 2점문항 반환 (String)
+// const select_soyes_AI_Ebt_Table = async (
+//   user_table,
+//   user_attr,
+//   ebt_Question,
+//   parsepUid
+// ) => {
+//   try {
+//     // console.log(user_table);
+//     const select_query = `SELECT * FROM ${user_table} WHERE ${user_attr.pKey}='${parsepUid}'`; // Select Query
+//     const ebt_school_data = await fetchUserData(connection_AI, select_query);
+//     // console.log(ebt_school_data[0]);
+//     // ebt_school_data[0]
+//     //   ? console.log(`${parsepUid} 계정은 존재합니다`)
+//     //   : console.log(`${parsepUid} 계정은 없습니다`);
+//     // delete ebt_school_data[0].uid; // uid 속성 삭제
+//     // Attribute의 값이 2인 요소의 배열 필터링. select 값이 없으면
+
+//     const problem_attr_arr = ebt_school_data[0]
+//       ? Object.keys(ebt_school_data[0])
+//       : [];
+
+//     const problem_attr_nameArr = problem_attr_arr.filter(
+//       // 속성명이 question을 가지고있고, 해당 속성의 값이 2인 경우 filtering
+//       (el) => el.includes("question") && ebt_school_data[0][el] === 2
+//     );
+//     // console.log(problem_attr_nameArr);
+
+//     // 문답 개수에 따른 시나리오 문답 투척
+//     // Attribute의 값이 2인 요소가 없는 경우
+//     return problem_attr_nameArr.length === 0
+//       ? { testResult: "", ebt_school_data }
+//       : {
+//           testResult: problem_attr_nameArr
+//             .map((el) => ebt_Question[el])
+//             .join("\n"),
+//           ebt_school_data,
+//         };
+//   } catch (err) {
+//     console.log(err);
+//     return { testResult: "", ebt_school_data: {} };
+//   }
+// };
+
+// const select_soyes_AI_Ebt_Analyis = async (inputTable, parsepUid) => {
+//   // 동기식 DB 접근 함수 1. Promise 생성 함수
+//   try {
+//     const {
+//       ebtClass,
+//       table, // 조회할 EBT table
+//       attribute, // table Attribute
+//     } = inputTable;
+
+//     const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`; // Select Query
+//     const ebt_data = await fetchUserData(connection_AI, select_query);
+//     // console.log(ebt_data[0]);
+
+//     // 검사를 진행하지 않은 경우
+//     if (!ebt_data[0])
+//       return {
+//         ebtClass: "NonTesting",
+//         analyisResult: "NonTesting",
+//       };
+//     const analyisResult = JSON.parse(ebt_data[0].chat).text;
+//     // console.log("chat: " + chat);
+
+//     return {
+//       ebtClass,
+//       analyisResult,
+//     };
+//   } catch (err) {
+//     console.log(err);
+//     return {
+//       analyisResult: "select_soyes_AI_Ebt_Analyis Error",
+//     };
+//   }
+// };
+
+// User 성격 검사 유형 반환 (String)
+// const select_soyes_AI_Pt_Table = async (user_table, user_attr, parsepUid) => {
+//   try {
+//     // console.log(user_table);
+//     const select_query = `SELECT * FROM ${user_table} WHERE ${user_attr.pKey}='${parsepUid}'`; // Select Query
+//     const ebt_school_data = await fetchUserData(connection_AI, select_query);
+//     // console.log(ebt_school_data[0]);
+
+//     return ebt_school_data[0] ? ebt_school_data[0].persanl_result : "default";
+//   } catch (err) {
+//     console.log(err);
+//     return "default";
+//   }
+// };
+
+// EBT 반영 Class 정의
+
 // AI API
+
 const openAIController = {
   // 감정 분석 AI
   postOpenAIEmotionAnalyze: async (req, res) => {
@@ -618,26 +678,26 @@ const openAIController = {
       /* 2024-08-20 - new DB 저장 */
       if (true) {
         const table = EBT_Table_Info["All"].table;
-        const { cKey, analysis, score, status, created_at } =
+        const { pKey, cKey, analysis, score, status, created_at } =
           EBT_Table_Info["All"].attribute;
 
         // soyes_ai_Ebt Table 삽입
         // 1. SELECT TEST (row가 있는지 없는지 검사)
-        const select_query = `SELECT ${status} FROM ${table} WHERE uid ='${parsepUid}' ORDER BY ${created_at} DESC LIMIT 1`;
+        const select_query = `SELECT ${pKey}, ${status} FROM ${table} WHERE uid ='${parsepUid}' ORDER BY ${created_at} DESC LIMIT 1`;
         const ebt_data = await fetchUserData(connection_AI, select_query);
 
         // console.log(ebt_data[0]);
 
         // 2. UPDATE TEST
         if (ebt_data[0] && !ebt_data[0][status]) {
-          const update_query = `UPDATE ${table} SET ${analysis[type]}=?, ${score[type]}=?, ${status}=? WHERE ${cKey} = ?`;
+          const update_query = `UPDATE ${table} SET ${analysis[type]}=?, ${score[type]}=?, ${status}=? WHERE ${pKey} = ?`;
           // console.log(update_query);
 
           const update_value = [
-            analyzeMsg,
-            parsingScore.join("/"),
-            type === "Self" ? 1 : 0,
-            parsepUid,
+            analyzeMsg, // AI 분석 결과
+            parsingScore.join("/"), // Score Array String
+            type === "Self" ? 1 : 0, // type === Self 일 경우 row 완성 표시
+            ebt_data[0].ebt_id, // pKey 값
           ];
           // console.log(update_value);
 
@@ -1517,57 +1577,57 @@ const openAIController = {
 
       /* 프롬프트 삽입 분기 */
 
-      // 심리 검사 결과 프롬프트 상시 삽입
-      if (!req.session.psy_testResult_promptArr_last) {
-        // 심리 검사 결과 프롬프트 삽입
-        console.log("심리 검사 결과 프롬프트 삽입");
-        let psy_testResult_promptArr_last = []; // 2점을 획득한 정서행동검사 문항을 저장하는 prompt
-        // TODO# EBT Table 갱신 후 변경 예정
-        const psy_testResult_promptArr = EBT_classArr.map(async (ebt_class) => {
-          const select_Ebt_Result = await select_soyes_AI_Ebt_Table(
-            EBT_Table_Info[ebt_class].table, // Table Name
-            EBT_Table_Info[ebt_class].attribute,
-            EBT_Table_Info[ebt_class].result, // EBT Question 11가지 분야 중 1개 (Table에 따라 결정)
-            parsepUid // Uid
-          );
+      //     // 심리 검사 결과 프롬프트 상시 삽입
+      //     if (!req.session.psy_testResult_promptArr_last) {
+      //       // 심리 검사 결과 프롬프트 삽입
+      //       console.log("심리 검사 결과 프롬프트 삽입");
+      //       let psy_testResult_promptArr_last = []; // 2점을 획득한 정서행동검사 문항을 저장하는 prompt
+      //       // TODO# EBT Table 갱신 후 변경 예정
+      //       const psy_testResult_promptArr = EBT_classArr.map(async (ebt_class) => {
+      //         const select_Ebt_Result = await select_soyes_AI_Ebt_Table(
+      //           EBT_Table_Info[ebt_class].table, // Table Name
+      //           EBT_Table_Info[ebt_class].attribute,
+      //           EBT_Table_Info[ebt_class].result, // EBT Question 11가지 분야 중 1개 (Table에 따라 결정)
+      //           parsepUid // Uid
+      //         );
 
-          // console.log(select_Ebt_Result);
+      //         // console.log(select_Ebt_Result);
 
-          const psy_testResult_prompt = {
-            role: "system",
-            content: `다음에 오는 문단은 user의 ${ebt_class} 관련 심리검사 결과입니다.
-  '''
-  ${select_Ebt_Result.testResult}
-  '''
-  위 문단이 비어있다면 ${
-    // DB Table의 값 유무에 따라 다른 프롬프트 입력
-    !select_Ebt_Result.ebt_school_data[0]
-      ? "user는 심리검사를 진행하지 않았습니다."
-      : "user의 심리검사 결과는 문제가 없습니다."
-  }`,
-          };
-          // console.log(psy_testResult_prompt);
-          return psy_testResult_prompt;
-        });
-        // map method는 pending 상태의 promise를 반환하므로 Promise.all method를 사용하여 resolve 상태가 되기를 기다려준다.
-        await Promise.all(psy_testResult_promptArr).then((prompt) => {
-          psy_testResult_promptArr_last = [...prompt]; // resolve 상태로 반환된 prompt 배열을 psy_testResult_promptArr_last 변수에 복사
-        });
+      //         const psy_testResult_prompt = {
+      //           role: "system",
+      //           content: `다음에 오는 문단은 user의 ${ebt_class} 관련 심리검사 결과입니다.
+      // '''
+      // ${select_Ebt_Result.testResult}
+      // '''
+      // 위 문단이 비어있다면 ${
+      //   // DB Table의 값 유무에 따라 다른 프롬프트 입력
+      //   !select_Ebt_Result.ebt_school_data[0]
+      //     ? "user는 심리검사를 진행하지 않았습니다."
+      //     : "user의 심리검사 결과는 문제가 없습니다."
+      // }`,
+      //         };
+      //         // console.log(psy_testResult_prompt);
+      //         return psy_testResult_prompt;
+      //       });
+      //       // map method는 pending 상태의 promise를 반환하므로 Promise.all method를 사용하여 resolve 상태가 되기를 기다려준다.
+      //       await Promise.all(psy_testResult_promptArr).then((prompt) => {
+      //         psy_testResult_promptArr_last = [...prompt]; // resolve 상태로 반환된 prompt 배열을 psy_testResult_promptArr_last 변수에 복사
+      //       });
 
-        // console.log(psy_testResult_promptArr_last);
+      //       // console.log(psy_testResult_promptArr_last);
 
-        promptArr.push(...psy_testResult_promptArr_last);
-        promptArr.push(psyResult_prompt);
-        // promptArr.push(solution_prompt);
+      //       promptArr.push(...psy_testResult_promptArr_last);
+      //       promptArr.push(psyResult_prompt);
+      //       // promptArr.push(solution_prompt);
 
-        req.session.psy_testResult_promptArr_last = [
-          ...psy_testResult_promptArr_last,
-        ];
-      } else {
-        console.log("세션 저장된 심리 검사 결과 프롬프트 삽입");
-        promptArr.push(...req.session.psy_testResult_promptArr_last);
-        promptArr.push(psyResult_prompt);
-      }
+      //       req.session.psy_testResult_promptArr_last = [
+      //         ...psy_testResult_promptArr_last,
+      //       ];
+      //     } else {
+      //       console.log("세션 저장된 심리 검사 결과 프롬프트 삽입");
+      //       promptArr.push(...req.session.psy_testResult_promptArr_last);
+      //       promptArr.push(psyResult_prompt);
+      //     }
 
       // 검사 결과 분석 관련 멘트 감지
       let testClass = ""; // 감지 텍스트 저장 변수
@@ -1882,13 +1942,10 @@ const openAIController = {
       // });
     }
   },
-  // User 정서행동 검사 결과 반환
+  // User 정서행동 검사 11종 결과 반환
   postOpenAIUserEBTResultData: async (req, res) => {
     const { EBTData } = req.body;
-    let parseEBTdata,
-      parsepUid,
-      // returnObj = {},
-      returnArr = [];
+    let parseEBTdata, parsepUid;
 
     try {
       // json 파싱
@@ -1896,7 +1953,10 @@ const openAIController = {
         parseEBTdata = JSON.parse(EBTData);
       } else parseEBTdata = EBTData;
 
-      const { pUid, contentKey } = parseEBTdata;
+      const { pUid, contentKey, pKeyValue } = parseEBTdata;
+      // contentKey: AI 분석 결과 반환 트리거
+      // keyValue: EBT Table Row Primary Key. 마이페이지 결과보기 버튼에 할당 후 전달받을 예정
+
       // No pUid => return
       if (!pUid) {
         console.log("No pUid input value - 400");
@@ -1908,39 +1968,40 @@ const openAIController = {
         `User 정서행동 검사 결과 반환 API /openAI/ebtresult Path 호출 - pUid: ${parsepUid}`
       );
 
-      /*
-      // EBT DB에서 차출 - Obj
-      await Promise.all(
-        EBT_classArr.map(async (ebt_class) => {
-          // 분야별 값 조회
-          const select_Ebt_Result = await select_soyes_AI_Ebt_Result(
-            EBT_Table_Info[ebt_class],
-            parsepUid // Uid
-          );
-          returnObj[ebt_class] = { ...select_Ebt_Result };
-        })
+      // // TODO# New EBT Table 갱신 후 변경 예정
+      // const ebtResultArr = EBT_classArr.map(async (ebt_class) => {
+      //   const select_Ebt_Result = await select_soyes_AI_Ebt_Result(
+      //     EBT_Table_Info[ebt_class],
+      //     parsepUid // Uid
+      //   );
+      //   // contentKey 값이 입력되지 않을 경우 analysisResult 속성 삭제
+      //   if (!contentKey) delete select_Ebt_Result.content;
+      //   return { ebt_class, ...select_Ebt_Result };
+      // });
+      // // map method는 pending 상태의 promise를 반환하므로 Promise.all method를 사용하여 resolve 상태가 되기를 기다려준다.
+      // await Promise.all(ebtResultArr).then((result) => {
+      //   returnArr = [...result]; // resolve 상태로 반환된 배열을 returnArr 변수에 복사
+      // });
+      // // console.log(returnArr);
+
+      const resultArr = await select_soyesAI_EbtResult_v2(
+        pKeyValue,
+        contentKey,
+        parsepUid
       );
-      // console.log(returnObj);
-      */
 
-      // TODO# New EBT Table 갱신 후 변경 예정
-      const ebtResultArr = EBT_classArr.map(async (ebt_class) => {
-        const select_Ebt_Result = await select_soyes_AI_Ebt_Result(
-          EBT_Table_Info[ebt_class],
-          parsepUid // Uid
-        );
-        // contentKey 값이 입력되지 않을 경우 analysisResult 속성 삭제
-        if (!contentKey) delete select_Ebt_Result.content;
-        return { ebt_class, ...select_Ebt_Result };
-      });
-      // map method는 pending 상태의 promise를 반환하므로 Promise.all method를 사용하여 resolve 상태가 되기를 기다려준다.
-      await Promise.all(ebtResultArr).then((result) => {
-        returnArr = [...result]; // resolve 상태로 반환된 배열을 returnArr 변수에 복사
-      });
-      // console.log(returnArr);
+      // 정서행동검사 완료 데이터가 없을 경우
+      if (!resultArr.length) {
+        console.log(`Non ebt_data - pUid(${parsepUid})`);
+        return res.status(200).json({
+          message: [],
+        });
+      }
 
-      return res.json({
-        message: returnArr.sort((a, b) => b.tScore - a.tScore),
+      // console.log(resultArr);
+
+      return res.status(200).json({
+        message: resultArr.sort((a, b) => b.tScore - a.tScore),
       });
     } catch (err) {
       console.error(err);
