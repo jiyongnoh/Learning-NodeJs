@@ -193,6 +193,7 @@ const {
   persona_prompt_pupu_v2,
   persona_prompt_pupu_v3,
   persona_prompt_pupu_v4,
+  persona_prompt_pupu_v5,
 } = require("../DB/test_prompt");
 
 // 인지행동 검사 관련
@@ -1128,7 +1129,7 @@ const openAIController = {
       );
 
       // 고정 삽입 프롬프트
-      promptArr.push(persona_prompt_pupu_v4); // 푸푸 페르소나 v4
+      promptArr.push(persona_prompt_pupu_v5); // 2024.08.21~
       promptArr.push(info_prompt); // 유저관련 정보
 
       // const lastUserContent =
@@ -1944,7 +1945,7 @@ const openAIController = {
         }),
       });
     } catch (err) {
-      console.error(err.sqlMessage);
+      console.error(err);
       res.status(500).json({
         message: "Server Error - 500",
       });
