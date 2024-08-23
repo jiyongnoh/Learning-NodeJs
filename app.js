@@ -129,6 +129,7 @@ app.use(
 );
 
 app.get("/", (req, res) => {
+  // jenkins 배포용 주석
   res.status(200).json({ text: "Hello World!" });
 });
 
