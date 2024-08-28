@@ -1401,8 +1401,8 @@ const openAIController = {
   // 게임친구 모델 - 우비
   postOpenAIConsultingUbi: async (req, res) => {
     const { EBTData } = req.body;
+    console.log(EBTData);
 
-    // console.log(EBTData);
     let parseEBTdata, parseMessageArr, parsepUid; // Parsing 변수
     let promptArr = []; // 삽입 Prompt Array
     // let prevChat_flag = true; // 이전 대화 내역 유무
@@ -1487,6 +1487,14 @@ const openAIController = {
       // promptArr.push(completions_emotion_prompt); // 답변 이모션 넘버 확인 프롬프트 삽입
 
       // console.log(promptArr);
+
+      if (game === "remarks") {
+        promptArr.push({
+          role: "system",
+          content: `assistant는 user와 끝말잇기 게임을 진행한다. 단어는 2 ~ 5글자 사이의 명사만으로 생성한다. 
+'륨', '릇'과 같은 한방단어로 인해 assistant가 패배할 경우 assistant는 패배를 인정하고 재시작 여부를 user에게 묻는다.`,
+        });
+      }
 
       const response = await openai.chat.completions.create({
         messages: [...promptArr, ...parseMessageArr],
