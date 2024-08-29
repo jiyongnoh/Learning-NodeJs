@@ -6,6 +6,7 @@ const {
   emotinalBehaviorController,
   personalityController,
   careerController,
+  reportController,
 } = require("../controller/index");
 
 const { putEmotinalResultHandler, postEmotinalResultHandler } =
@@ -13,6 +14,8 @@ const { putEmotinalResultHandler, postEmotinalResultHandler } =
 const { putPersonalResultHandler, postPersonalResultHandler } =
   personalityController;
 const { putCareerResultHandler, postCareerResultHandler } = careerController;
+
+const { postReportTest } = reportController;
 
 // Emotinal 결과 삽입(PUT)
 router.post("/putEmotinalResult", putEmotinalResultHandler);
@@ -29,6 +32,7 @@ router.post("/putCareerResult", putCareerResultHandler);
 // Career 결과 확인 (SELETE)
 router.post("/postCareerResult", postCareerResultHandler);
 
+router.get("/report", postReportTest);
 // 에러 메세지 처리
 router.use(errController.errMessageHandler);
 

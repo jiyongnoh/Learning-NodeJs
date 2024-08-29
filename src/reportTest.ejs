@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Soyes Report TEST</title>
+    <link rel='stylesheet' href=http://localhost/soye/report/css/report.css>
+    <!--script src='https://cdn.jsdelivr.net/npm/chart.js'></script-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  </head>
+  <body>
+    <!-- Hidden Input -->
+    <input type="hidden" id="myHiddenInput_result_rs2" value="28" />
+    <input type="hidden" id="myHiddenInput_result_ml2" value="65" />
+    <input type="hidden" id="myHiddenInput_result_ss2" value="85" />
+    <input type="hidden" id="myHiddenInput_result_cd2" value="90" />
+    <div class="wrap">
+      <div class="page">
+        <div style="width: 500px">
+          <canvas id="myRadarChart"></canvas>
+        </div>
+        <a
+          href="http://localhost/soye/report/uploads/cpu12345623112821_tempHtmlFile06.html"
+          target="_blank"
+          >Go to Result<br
+        /></a>
+        <img
+          src="http://localhost/soye/report/imgpub/radar_sample.png"
+          alt="Description of the image"
+          width="500"
+          height="300"
+        />
+
+        <div class="percentage_box">
+          <div class="percentage_box_left">
+            <div class="percentage_box_left_tit">코드화 능력</div>
+            <div class="percentage_box_left_level">레벨3</div>
+            <div class="percentage_box_left_per">백분위 90%</div>
+          </div>
+          <div class="percentage_box_right">
+            <div
+              class="anchor"
+              id="id_anchor_cd"
+              style="left: calc(90% - 18px)"
+            ></div>
+            <div class="percentage_box_right_cell">레벨1</div>
+            <div class="percentage_box_right_cell">레벨2</div>
+            <div class="percentage_box_right_cell">레벨3</div>
+          </div>
+          <div class="text_per">
+            * 나의 적성레벨은 i 로표시하며 , 날개 '<i class="r"> - - -</i> '
+            의길이는표준오차를뜻합니다.
+          </div>
+        </div>
+        코드화 능력은 주어진 알고리즘을 구현하기 위해 프로그래밍 언어와 같이
+        사전 정의된 규칙이나 부호를 빠르고 정확하게 이해하고 활용하는 능력을
+        뜻하며 세부적으로 아래와 같은 능력을 포함 합니다.
+        <br /><br />
+        <div class="li mbt8">
+          절차 실행을 위해 적합한 규칙, 공식, 명령어를 찾아내는 능력
+        </div>
+
+        <div class="li mbt8">
+          명령어의 가변적 요소를 통제하고 활용할 수 있는 능력
+        </div>
+
+        <div class="li mbt8">
+          복수의 명령어를 활용하여 단위 절차 실행을 위한 명령어 세트를 만들거나
+          재활용할 수 있는 능력
+        </div>
+
+        <div class="li mbt8">
+          명령어를 최소로 사용하거나 처리속도가 더 빠른 코드를 구현할 수 있는
+          능력
+        </div>
+
+        코드화 능력이 높은 경우 프로그래밍 언어에 대한 이해도와 응용력이 뛰어날
+        가능성이 높습니다. 또한, C, 어셈블리 등과 같이 난이도가 높은 프로그래밍
+        언어를 배우는데 유리하고, 이를 바탕으로 단순 응용 프로그래밍 뿐 아니라
+        OS(운영체제) 개발, 디바이스 개발 등 하드웨어에 근접한 프로그래밍에서도
+        유리할 가능성이 높습니다. 이러한 능력은 컴퓨터 프로그래밍 영역 전반에
+        걸쳐 매우 중요하므로 관련이 많은 직무 또한 대부분이라고 할 수 있습니다.
+        다만, 데이터 관리 및 운영자, 데이터 분석가, 정보시스템 운영자, 정보통신
+        컨설턴트, QA테스트 등의 직무는 코드화 능력이 요구되는 정도가 상대적으로
+        높지 않다고 볼 수 있습니다. 코드화 능력이 너무 낮은 경우 다수의 컴퓨터
+        프로그래밍 영역에서 평균 이상의 성취를 하기 어려울 수 있으므로 신중할
+        필요가 있으며 노력 대비 성취 가능성에 대해서도 잘 파악하는 것이
+        좋습니다.
+
+        <div class="now_p">-4-</div>
+      </div>
+    </div>
+  </body>
+  <script>
+    var result_rs2 = document.getElementById("myHiddenInput_result_rs2").value;
+    var result_ml2 = document.getElementById("myHiddenInput_result_ml2").value;
+    var result_ss2 = document.getElementById("myHiddenInput_result_ss2").value;
+    var result_cd2 = document.getElementById("myHiddenInput_result_cd2").value;
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("id_anchor_cd").style.left =
+        (314 * result_cd2) / 100 - 36 / 2 + "px";
+    });
+
+    var ctx = document.getElementById("myRadarChart").getContext("2d");
+    var myRadarChart = new Chart(ctx, {
+      type: "radar",
+      data: {
+        labels: ["Running", "Swimming", "Cycling", "Climbing", "Jumping"],
+        datasets: [
+          {
+            label: "Person A",
+            data: [20, 10, 4, 2, 7],
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+          },
+          {
+            label: "Person B",
+            data: [5, 7, 12, 15, 10],
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+          },
+        ],
+      },
+      options: {
+        elements: {
+          line: {
+            borderWidth: 0, // 경계선 없음
+          },
+          point: {
+            radius: 0, // 데이터 포인트 없음
+          },
+        },
+        scales: {
+          r: {
+            beginAtZero: true, // 0부터 시작
+          },
+        },
+      },
+    });
+  </script>
+</html>
