@@ -486,7 +486,11 @@ const reportController = {
         // interpretations,
       });
 
-      const browser = await puppeteer.launch();
+      // const browser = await puppeteer.launch();
+      const browser = await puppeteer.launch({
+        headless: true, // 백그라운드 모드로 실행
+        args: ["--no-sandbox", "--disable-setuid-sandbox"], // 샌드박스 모드 비활성화
+      });
       const page = await browser.newPage();
       await page.setContent(htmlContent, { waitUntil: "networkidle0" });
       const pdfBuffer = await page.pdf({ format: "A4" });
