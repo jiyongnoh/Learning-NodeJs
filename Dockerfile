@@ -1,6 +1,30 @@
 # 사용할 Node.js의 버전을 명시합니다.
 FROM node:18
 
+# 필요한 라이브러리 설치
+RUN apt-get update && apt-get install -y \
+  libnss3 \
+  libatk-bridge2.0-0 \
+  libx11-xcb1 \
+  libxcb-dri3-0 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxrandr2 \
+  libgbm1 \
+  libasound2 \
+  libpangocairo-1.0-0 \
+  libgtk-3-0 \
+  libxshmfence1 \
+  libnss3-dev \
+  libnspr4 \
+  lsb-release \
+  fonts-liberation \
+  libappindicator3-1 \
+  xdg-utils \
+  wget \
+  libgconf-2-4 \
+  libxss1
+
 # 애플리케이션 디렉토리를 생성합니다.
 WORKDIR /usr/src/app
 
