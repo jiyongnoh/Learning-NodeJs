@@ -480,10 +480,12 @@ const reportController = {
     try {
       // const { scores, interpretations, recipientEmail } = req.body;
 
-      const templatePath = path.join(__dirname, "..", "src", "reportTest.ejs");
+      const templatePath = path.join(__dirname, "..", "src", "reportTest2.ejs");
       const htmlContent = await ejs.renderFile(templatePath, {
-        // scores,
-        // interpretations,
+        reportDate: "2024-09-06",
+        name: "노지용",
+        age: "51",
+        gender: "남",
       });
 
       // const browser = await puppeteer.launch();
