@@ -32,7 +32,7 @@ router.post("/putCareerResult", putCareerResultHandler);
 // Career 결과 확인 (SELETE)
 router.post("/postCareerResult", postCareerResultHandler);
 
-router.get("/report", postReportTest);
+router.post("/report", postReportTest);
 // 에러 메세지 처리
 router.use(errController.errMessageHandler);
 

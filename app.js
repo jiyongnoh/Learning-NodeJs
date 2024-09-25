@@ -42,6 +42,9 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+// Report 디렉토리 인지
+app.use(express.static(path.join(__dirname, ".", "src", "report_final")));
+
 // cookie-parser 추가.
 const cookieParser = require("cookie-parser");
 app.use(cookieParser("@earthworm"));
