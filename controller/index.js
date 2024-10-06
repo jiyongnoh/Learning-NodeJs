@@ -902,7 +902,7 @@ const reportController = {
 
       const page = await browser.newPage();
 
-      await page.emulateMediaType("screen");
+      // await page.emulateMediaType("screen");
 
       await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
@@ -937,7 +937,8 @@ const reportController = {
       };
 
       // await transporter.sendMail(mailOptions);
-      res.status(200).json({ message: "PDF sent successfully to " });
+
+      return res.status(200).json({ message: "PDF sent successfully to " });
     } catch (error) {
       console.error("Error processing request:", error);
       res.status(500).json({ message: "Failed to process the request" });
