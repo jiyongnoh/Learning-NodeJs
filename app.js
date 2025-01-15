@@ -28,6 +28,7 @@ app.use(
       "https://soyes-ai-project.vercel.app",
       "https://www.soyeskids.store",
       "http://localhost:3000",
+      "http://localhost:3001",
       "http://127.0.0.1:5500",
       "http://localhost",
       // "http://d1rq5xi9hzhyrc.cloudfront.net",
