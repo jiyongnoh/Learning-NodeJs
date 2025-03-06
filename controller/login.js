@@ -387,32 +387,50 @@ const loginController = {
     const sessionId = req.sessionID;
     let parseUid = "",
       parseEmail = "";
+    let tokenResponse, response;
 
     // console.log("KAKAO_REST_API_KEY: " + process.env.KAKAO_REST_API_KEY);
     try {
-      // POST 요청으로 액세스 토큰 요청
-      const tokenResponse = await axios.post(
-        "https://kauth.kakao.com/oauth/token",
-        null,
-        {
-          params: {
-            grant_type: "authorization_code",
-            client_id: process.env.KAKAO_REST_API_KEY, // 카카오 개발자 콘솔에서 발급받은 REST API 키
-            redirect_uri: `${process.env.REDIRECT_URL}?type=kakao`, // 카카오 개발자 콘솔에 등록한 리디렉션 URI
-            code: code, // 클라이언트로부터 받은 권한 코드
-          },
+      // Kakao Access Token Request
+      try {
+        tokenResponse = await axios.post(
+          "https://kauth.kakao.com/oauth/token",
+          null,
+          {
+            params: {
+              grant_type: "authorization_code",
+              client_id: process.env.KAKAO_REST_API_KEY, // 카카오 개발자 콘솔에서 발급받은 REST API 키
+              redirect_uri: `${process.env.REDIRECT_URL}?type=kakao`, // 카카오 개발자 콘솔에 등록한 리디렉션 URI
+              code: code, // 클라이언트로부터 받은 권한 코드
+            },
+            headers: {
+              "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+            },
+          }
+        );
+      } catch (err) {
+        delete err.headers;
+        console.error(err);
+        return res.status(400).json({
+          message: `AccessToken Request Error: ${err.message}`,
+        });
+      }
+
+      // Kakao Resource Access Request
+      try {
+        response = await axios.get("https://kapi.kakao.com/v2/user/me", {
           headers: {
+            Authorization: `Bearer ${tokenResponse.data.access_token}`,
             "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
           },
-        }
-      );
-
-      const response = await axios.get("https://kapi.kakao.com/v2/user/me", {
-        headers: {
-          Authorization: `Bearer ${tokenResponse.data.access_token}`,
-          "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
-        },
-      });
+        });
+      } catch (err) {
+        delete err.headers;
+        console.error(err);
+        return res.status(400).json({
+          message: `Kakao Resource Access Request Error: ${err.message}`,
+        });
+      }
 
       // 성공적으로 사용자 정보를 받아옴
       // console.log(response.data);

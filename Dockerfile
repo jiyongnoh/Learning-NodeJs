@@ -1,5 +1,5 @@
 # 사용할 Node.js의 버전을 명시합니다.
-FROM node:18
+FROM node:20
 
 # 필요한 라이브러리 설치
 RUN apt-get update && apt-get install -y \

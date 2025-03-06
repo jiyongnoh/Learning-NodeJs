@@ -1985,6 +1985,8 @@ const openAIController = {
         endPitch,
       } = parseData;
 
+      console.log(parseData);
+
       const response = await axios.post(
         api_url,
         {
@@ -2010,7 +2012,7 @@ const openAIController = {
         }
       );
 
-      // console.log(response.data);
+      // console.log(response);
       // 음성 데이터를 클라이언트로 전송
       res.writeHead(200, {
         "Content-Type": "audio/mp3",
@@ -2020,7 +2022,7 @@ const openAIController = {
       // JSON 형식이 아니기에 res.json 사용 X
       res.end(response.data);
     } catch (error) {
-      console.error(error.message);
+      console.error(error);
       res.status(500).end("Internal Server Error");
     }
   },
