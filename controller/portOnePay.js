@@ -53,16 +53,29 @@ function addDays(
   return result;
 }
 
-const items = new Map([
-  [
-    "shoes",
-    {
-      name: "신발",
-      price: 1000,
-      currency: "KRW",
-    },
-  ],
-]);
+// const items = new Map([
+//   [
+//     "shoes",
+//     {
+//       name: "신발",
+//       price: 1000,
+//       currency: "KRW",
+//     },
+//   ],
+// ]);
+
+// 요청된 아이템이 서버에서 인증된 아이템인지 확인
+// function verifyPayment(payment) {
+//   if (payment.customData == null) return false;
+//   const customData = JSON.parse(payment.customData);
+//   const item = items.get(customData.item);
+//   if (item == null) return false;
+//   return (
+//     payment.orderName === item.name &&
+//     payment.amount.total === item.price &&
+//     payment.currency === item.currency
+//   );
+// }
 
 const paymentStore = new Map();
 
@@ -92,19 +105,6 @@ async function syncPayment(paymentId) {
     return false;
   }
   return payment;
-}
-
-// 요청된 아이템이 서버에서 인증된 아이템인지 확인
-function verifyPayment(payment) {
-  if (payment.customData == null) return false;
-  const customData = JSON.parse(payment.customData);
-  const item = items.get(customData.item);
-  if (item == null) return false;
-  return (
-    payment.orderName === item.name &&
-    payment.amount.total === item.price &&
-    payment.currency === item.currency
-  );
 }
 
 const portOnePaymentController = {
