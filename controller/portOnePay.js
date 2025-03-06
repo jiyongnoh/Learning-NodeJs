@@ -100,7 +100,7 @@ async function syncPayment(paymentId) {
     // if (!verifyPayment(actualPayment)) return false;
     if (payment.status === "PAID") return payment;
     payment.status = "PAID";
-    console.info("결제 성공");
+    // console.info("결제 성공");
   } else {
     return false;
   }
@@ -426,27 +426,27 @@ const portOnePaymentController = {
     }
   },
   // PortOne Payment Webhook
-  postPortOnePaymentWebhook: async (req, res, next) => {
-    try {
-      let webhook;
-      try {
-        webhook = await PortOne.Webhook.verify(
-          process.env.V2_WEBHOOK_SECRET,
-          req.body,
-          req.headers
-        );
-      } catch (e) {
-        if (e instanceof PortOne.Webhook.WebhookVerificationError)
-          return res.status(400).end();
-        throw e;
-      }
-      if ("data" in webhook && "paymentId" in webhook.data)
-        await syncPayment(webhook.data.paymentId);
-      return res.status(200).end();
-    } catch (e) {
-      next(e);
-    }
-  },
+  // postPortOnePaymentWebhook: async (req, res, next) => {
+  //   try {
+  //     let webhook;
+  //     try {
+  //       webhook = await PortOne.Webhook.verify(
+  //         process.env.V2_WEBHOOK_SECRET,
+  //         req.body,
+  //         req.headers
+  //       );
+  //     } catch (e) {
+  //       if (e instanceof PortOne.Webhook.WebhookVerificationError)
+  //         return res.status(400).end();
+  //       throw e;
+  //     }
+  //     if ("data" in webhook && "paymentId" in webhook.data)
+  //       await syncPayment(webhook.data.paymentId);
+  //     return res.status(200).end();
+  //   } catch (e) {
+  //     next(e);
+  //   }
+  // },
 };
 
 module.exports = {
