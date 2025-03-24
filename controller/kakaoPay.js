@@ -301,7 +301,7 @@ const kakaoPayController = {
   },
   // User Expiration Select
   postUserExpiration: async (req, res) => {
-    console.log("UserExpiration API 호출");
+    // console.log("UserExpiration API 호출");
     const { data } = req.body;
     let parseInput, parsepUid;
     try {

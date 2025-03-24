@@ -191,6 +191,8 @@ const kakaoPayRouter = require("./router/kakaoPay");
 app.use("/kakaopay", kakaoPayRouter);
 const portOnePayRouter = require("./router/portOnePay");
 app.use("/portOnepay", portOnePayRouter);
+const careerRouter = require("./router/careerTest");
+app.use("/career", careerRouter);
 
 // MailTest 경로 라우팅
 // const mailTestRouter = require("./router/mailTest");
