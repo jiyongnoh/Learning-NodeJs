@@ -223,6 +223,7 @@ const {
   PT_Table_Info,
   Consult_Table_Info,
   Ella_Training_Table_Info,
+  North_Table_Info,
 } = require("../DB/database_table_info");
 
 const EBT_classArr = [
@@ -295,155 +296,10 @@ const select_soyesAI_EbtResult_v2 = async (keyValue, contentKey, parsepUid) => {
   }
 };
 
-// (구) EBT Result Select Method
-// const select_soyes_AI_Ebt_Result = async (inputTable, parsepUid) => {
-//   // 동기식 DB 접근 함수 1. Promise 생성 함수
-//   try {
-//     const {
-//       table, // 조회할 EBT table (11개 Class)
-//       attribute, // table Attribute
-//       danger_score, // 위험 판단 점수
-//       caution_score,
-//       average,
-//       standard,
-//     } = inputTable;
-
-//     const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`; // Select Query
-//     const ebt_data = await fetchUserData(connection_AI, select_query);
-//     // console.log(ebt_data[0]);
-
-//     // 검사를 진행하지 않은 경우
-//     if (!ebt_data[0])
-//       return {
-//         testStatus: false,
-//         scoreSum: 99,
-//         tScore: 999.99,
-//         result: "NonTesting",
-//         content: "검사를 진행하지 않았구나!",
-//       };
-
-//     // 검사 스코어 합 + T점수 계산
-//     const scoreSum = Object.values(ebt_data[0])
-//       .filter((el) => typeof el === "number")
-//       .reduce((acc, cur) => acc + cur);
-//     const tScore = (((scoreSum - average) / standard) * 10 + 50).toFixed(2);
-//     // 검사 결과
-//     const result =
-//       danger_score <= scoreSum
-//         ? "경고"
-//         : caution_score <= scoreSum
-//         ? "주의"
-//         : "양호";
-//     // console.log("scoreSum: " + scoreSum);
-//     // console.log("tScore: " + tScore);
-//     // console.log("chat: " + ebt_data[0].chat);
-
-//     // danger_score 보다 높으면 "위험", 아니면 "그외" 반환
-//     return {
-//       testStatus: true,
-//       scoreSum,
-//       tScore: Number(tScore),
-//       result,
-//       content: JSON.parse(ebt_data[0].chat).text,
-//     };
-//   } catch (err) {
-//     console.log(err);
-//     return "Error";
-//   }
-// };
-
-// User 정서행동 2점문항 반환 (String)
-// const select_soyes_AI_Ebt_Table = async (
-//   user_table,
-//   user_attr,
-//   ebt_Question,
-//   parsepUid
-// ) => {
-//   try {
-//     // console.log(user_table);
-//     const select_query = `SELECT * FROM ${user_table} WHERE ${user_attr.pKey}='${parsepUid}'`; // Select Query
-//     const ebt_school_data = await fetchUserData(connection_AI, select_query);
-//     // console.log(ebt_school_data[0]);
-//     // ebt_school_data[0]
-//     //   ? console.log(`${parsepUid} 계정은 존재합니다`)
-//     //   : console.log(`${parsepUid} 계정은 없습니다`);
-//     // delete ebt_school_data[0].uid; // uid 속성 삭제
-//     // Attribute의 값이 2인 요소의 배열 필터링. select 값이 없으면
-
-//     const problem_attr_arr = ebt_school_data[0]
-//       ? Object.keys(ebt_school_data[0])
-//       : [];
-
-//     const problem_attr_nameArr = problem_attr_arr.filter(
-//       // 속성명이 question을 가지고있고, 해당 속성의 값이 2인 경우 filtering
-//       (el) => el.includes("question") && ebt_school_data[0][el] === 2
-//     );
-//     // console.log(problem_attr_nameArr);
-
-//     // 문답 개수에 따른 시나리오 문답 투척
-//     // Attribute의 값이 2인 요소가 없는 경우
-//     return problem_attr_nameArr.length === 0
-//       ? { testResult: "", ebt_school_data }
-//       : {
-//           testResult: problem_attr_nameArr
-//             .map((el) => ebt_Question[el])
-//             .join("\n"),
-//           ebt_school_data,
-//         };
-//   } catch (err) {
-//     console.log(err);
-//     return { testResult: "", ebt_school_data: {} };
-//   }
-// };
-
-// const select_soyes_AI_Ebt_Analyis = async (inputTable, parsepUid) => {
-//   // 동기식 DB 접근 함수 1. Promise 생성 함수
-//   try {
-//     const {
-//       ebtClass,
-//       table, // 조회할 EBT table
-//       attribute, // table Attribute
-//     } = inputTable;
-
-//     const select_query = `SELECT * FROM ${table} WHERE ${attribute.pKey}='${parsepUid}'`; // Select Query
-//     const ebt_data = await fetchUserData(connection_AI, select_query);
-//     // console.log(ebt_data[0]);
-
-//     // 검사를 진행하지 않은 경우
-//     if (!ebt_data[0])
-//       return {
-//         ebtClass: "NonTesting",
-//         analyisResult: "NonTesting",
-//       };
-//     const analyisResult = JSON.parse(ebt_data[0].chat).text;
-//     // console.log("chat: " + chat);
-
-//     return {
-//       ebtClass,
-//       analyisResult,
-//     };
-//   } catch (err) {
-//     console.log(err);
-//     return {
-//       analyisResult: "select_soyes_AI_Ebt_Analyis Error",
-//     };
-//   }
-// };
-
-// User 성격 검사 유형 반환 (String)
-// const select_soyes_AI_Pt_Table = async (user_table, user_attr, parsepUid) => {
-//   try {
-//     // console.log(user_table);
-//     const select_query = `SELECT * FROM ${user_table} WHERE ${user_attr.pKey}='${parsepUid}'`; // Select Query
-//     const ebt_school_data = await fetchUserData(connection_AI, select_query);
-//     // console.log(ebt_school_data[0]);
-
-//     return ebt_school_data[0] ? ebt_school_data[0].persanl_result : "default";
-//   } catch (err) {
-//     console.log(err);
-//     return "default";
-//   }
-// };
+// 숫자 확인용 함수
+function isNum(val) {
+  return !isNaN(val);
+}
 
 const openAIController = {
   // 감정 분석 AI
@@ -2423,7 +2279,7 @@ const openAIController = {
     }
   },
 };
-
+// 엘라 기분관리
 const ellaMoodController = {
   // 훈련 트레이너 - 엘라 (New)
   postOpenAIEllaMoodTraning: async (req, res) => {
@@ -2760,9 +2616,291 @@ Todo List가 아니라고 판단되면 제외한다.
     }
   },
 };
+// 북극이
+const NorthController = {
+  // 일기친구 모델 - 북극이 Save API
+  postOpenAIConsultingNorthSave: async (req, res) => {
+    const { data } = req.body;
+    let parseData, parsepUid, parseMentalData; // Parsing 변수
+    let promptArr = []; // 삽입 Prompt Array
+
+    const tagArr = ["mood", "friend", "family", "school"];
+    try {
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { content, pUid, tag } = parseData;
+
+      console.log(
+        `북극이 일기 Save API /consulting_emotion_north Path 호출 - pUid: ${parsepUid}`
+      );
+      console.log(parseData);
+
+      // No pUid => return
+      if (!pUid || !content || !tag) {
+        console.log("No Required input value - 400");
+        return res
+          .status(400)
+          .json({ message: "No Required input value - 400" });
+      }
+      // tag 값이 지정된 값이 아닐 경우
+      if (!tagArr.includes(tag)) {
+        console.log("The specified tag value was not entered.- 400");
+        return res
+          .status(400)
+          .json({ message: "The specified tag value was not entered.- 400" });
+      }
+
+      parsepUid = pUid;
+
+      // 고정 삽입 프롬프트 - 유저 작성 일기 인지
+      promptArr.push({
+        role: "system",
+        content: `다음에 오는 문장은 유저가 오늘 작성한 일기야.
+        '''
+        ${content}
+        '''`,
+      });
+
+      // tag 매칭 프롬프트 삽입
+      switch (tag) {
+        case "mood":
+          promptArr.push({
+            role: "user",
+            content: `일기를 분석하고 아래의 기준에 맞춰 유저의 기분에 대한 점수를 반환해줘.
+            '''
+            좋음: 2
+            보통: 1
+            나쁨: 0
+            '''
+            판단하기 힘들 경우 '보통'으로 판단하고 1을 반환해줘.
+            반드시 정수값만 반환해야 해.`,
+          });
+          break;
+        case "friend":
+          promptArr.push({
+            role: "user",
+            content: `일기를 분석하고 아래의 기준에 맞춰 유저의 또래관계에 대한 점수를 반환해줘.
+            '''
+            좋음: 2
+            보통: 1
+            나쁨: 0
+            '''
+            판단하기 힘들 경우 '보통'으로 판단하고 1을 반환해줘.
+            반드시 정수값만 반환해야 해.`,
+          });
+          break;
+        case "family":
+          promptArr.push({
+            role: "user",
+            content: `일기를 분석하고 아래의 기준에 맞춰 유저의 가족관계에 대한 점수를 반환해줘.
+            '''
+            좋음: 2
+            보통: 1
+            나쁨: 0
+            '''
+            판단하기 힘들 경우 '보통'으로 판단하고 1을 반환해줘.
+            반드시 정수값만 반환해야 해.`,
+          });
+          break;
+        case "school":
+          promptArr.push({
+            role: "user",
+            content: `일기를 분석하고 아래의 기준에 맞춰 유저의 학교생활에 대한 점수를 반환해줘.
+            '''
+            좋음: 2
+            보통: 1
+            나쁨: 0
+            '''
+            판단하기 힘들 경우 '보통'으로 판단하고 1을 반환해줘.
+            반드시 정수값만 반환해야 해.`,
+          });
+          break;
+        case "study":
+          promptArr.push({
+            role: "user",
+            content: `일기를 분석하고 아래의 기준에 맞춰 유저의 학업 성취도에 대한 점수를 반환해줘.
+            '''
+            좋음: 2
+            보통: 1
+            나쁨: 0
+            '''
+            판단하기 힘들 경우 '보통'으로 판단하고 1을 반환해줘.
+            반드시 정수값만 반환해야 해.`,
+          });
+          break;
+      }
+
+      const response = await openai.chat.completions.create({
+        messages: [...promptArr],
+        model: "gpt-4o", // gpt-4-0125-preview, gpt-3.5-turbo-0125, ft:gpt-3.5-turbo-1106:personal::8fIksWK3
+      });
+
+      // MentalData 정의
+      parseMentalData = !isNaN(response.choices[0].message.content)
+        ? Number(response.choices[0].message.content)
+        : 1;
+
+      // DB Insert
+      const table = North_Table_Info.table;
+
+      // 1. SELECT User Mood Table Data
+      // const select_query = `SELECT * FROM ${table} WHERE uid = '${parsepUid}' ORDER BY created_at DESC LIMIT 1;`;
+      // const select_data = await fetchUserData(connection_AI, select_query);
+
+      if (true) {
+        const insert_query = `INSERT INTO ${table} (uid, north_diary_content, north_diary_tag, north_mental_data) VALUES (?, ?, ?, ?);`;
+        // console.log(insert_query);
+        const insert_value = [parsepUid, content, tag, parseMentalData];
+        // console.log(insert_value);
+
+        connection_AI.query(
+          insert_query,
+          insert_value,
+          (error, rows, fields) => {
+            if (error) {
+              console.log(error);
+              return res.status(400).json({ message: error.sqlMessage });
+            }
+            console.log(`North Insert Success! - ${parsepUid}`);
+            return res
+              .status(200)
+              .json({ message: "North Diary Save Success!" });
+          }
+        );
+      }
+
+      // return res.status(200).json(message);
+    } catch (err) {
+      delete err.headers;
+      console.error(err);
+      return res.status(500).json({
+        message: `Server Error : ${err.message}`,
+      });
+    }
+  },
+  // 일기친구 모델 - 북극이 Load API
+  postOpenAIConsultingNorthLoad: async (req, res) => {
+    const { data } = req.body;
+    let parseData, parsepUid; // Parsing 변수
+
+    try {
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { pUid } = parseData;
+      console.log(`북극이 일기 Load API /north_load Path 호출 - pUid: ${pUid}`);
+      console.log(parseData);
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No Required input value - 400");
+        return res
+          .status(400)
+          .json({ message: "No Required input value - 400" });
+      }
+
+      parsepUid = pUid;
+
+      // 오늘 날짜 변환
+      const dateObj = new Date();
+      const year = dateObj.getFullYear();
+
+      // DB Select
+      const table = North_Table_Info.table;
+
+      // 1. SELECT User Mood Table Data
+      const select_query = `SELECT
+      north_id AS id,
+      north_diary_content AS content,
+      north_diary_tag AS tag,
+      DATE_FORMAT(created_at, '%Y-%m-%d') AS date
+      FROM ${table}
+      WHERE uid = '${parsepUid}'
+      AND created_at LIKE '%${year}%'
+      ORDER BY created_at ASC;`;
+      const select_data = await fetchUserData(connection_AI, select_query);
+
+      return res
+        .status(200)
+        .json({ message: "North Diary Load Success!", data: select_data });
+    } catch (err) {
+      delete err.headers;
+      console.error(err);
+      return res.status(500).json({
+        message: `Server Error : ${err.message}`,
+      });
+    }
+  },
+  // 일기친구 모델 - 북극이 일기 Delete API
+  postOpenAIConsultingNorthDelete: async (req, res) => {
+    const { data } = req.body;
+    let parseData, parsepUid; // Parsing 변수
+
+    try {
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { pUid, id } = parseData;
+      console.log(
+        `북극이 일기 Delete API /north_delete Path 호출 - pUid: ${pUid}`
+      );
+      console.log(parseData);
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+
+      // No pUid => return
+      if (!id) {
+        console.log("No id input value - 400");
+        return res.status(400).json({ message: "No id input value - 400" });
+      }
+
+      parsepUid = pUid;
+
+      // Delete Qurty
+      const table = North_Table_Info.table;
+      const delete_query = `DELETE FROM ${table} WHERE north_id = ?`;
+
+      // Delete 수행
+      connection_AI.query(delete_query, [id], (err, results) => {
+        if (err) {
+          console.log(err);
+          return res.status(400).json({ message: err.sqlMessage });
+        }
+
+        // 삭제된 행이 있는지 확인
+        if (results.affectedRows > 0) {
+          console.log("North Diary Delete Success!");
+          return res
+            .status(200)
+            .json({ message: "North Diary Delete Success!" });
+        } else {
+          console.log("No rows deleted, possibly due to non-existing id.");
+          return res
+            .status(400)
+            .json({ message: "No rows deleted, ID not found." });
+        }
+      });
+    } catch (err) {
+      delete err.headers;
+      console.error(err);
+      return res.status(500).json({
+        message: `Server Error : ${err.message}`,
+      });
+    }
+  },
+};
 
 module.exports = {
   openAIController,
   ellaMoodController,
+  NorthController,
   // openAIController_Regercy,
 };

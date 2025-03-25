@@ -6,6 +6,7 @@ const { errController } = require("../controller/index");
 const {
   openAIController,
   ellaMoodController,
+  NorthController,
   // openAIController_Regercy, // 레거시 코드
 } = require("../controller/openAI");
 
@@ -36,6 +37,13 @@ const {
   postOpenAIMoodDataSave,
   postOpenAIMoodDataLoad,
 } = ellaMoodController;
+
+// 엘라 Mood 훈련 Controler
+const {
+  postOpenAIConsultingNorthSave,
+  postOpenAIConsultingNorthLoad,
+  postOpenAIConsultingNorthDelete,
+} = NorthController;
 
 // 토큰 유효성 검사 미들웨어
 const { vaildateTokenConsulting, vaildatePlan } = loginController;
@@ -75,6 +83,13 @@ router.post("/training_mood_ella", postOpenAIEllaMoodTraning);
 router.post("/training_mood_ella/save", postOpenAIMoodDataSave);
 // 기분훈련 데이터 Load
 router.post("/training_mood_ella/load", postOpenAIMoodDataLoad);
+
+// 북극이 데이터 Save
+router.post("/north_save", postOpenAIConsultingNorthSave);
+// 북극이 데이터 Load
+router.post("/north_load", postOpenAIConsultingNorthLoad);
+// 북극이 데이터 Delete
+router.post("/north_delete", postOpenAIConsultingNorthDelete);
 
 // 달력 데이터 반환
 router.post("/calendar", postOpenAIMypageCalendarData);

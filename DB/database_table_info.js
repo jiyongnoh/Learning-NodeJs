@@ -389,6 +389,18 @@ const Ella_Training_Table_Info = {
     },
   },
 };
+const North_Table_Info = {
+  table: "soyes_ai_North",
+  attribute: {
+    pKey: "north_id",
+    fKey: "uid",
+    attr1: "north_diary_content",
+    attr2: "north_diary_tag",
+    attr3: "north_mental_data",
+    attr4: "created_at",
+    attr5: "updated_at",
+  },
+};
 module.exports = {
   User_Table_Info,
   Plan_Table_Info,
@@ -397,4 +409,5 @@ module.exports = {
   Consult_Table_Info,
   Review_Table_Info,
   Ella_Training_Table_Info,
+  North_Table_Info,
 };
