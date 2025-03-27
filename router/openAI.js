@@ -21,7 +21,8 @@ const {
   postOpenAIMypageCalendarData,
   postOpenAIMypageData,
   postClovaVoiceTTS,
-  postOpenAIPernalTestAnalysis,
+  // postOpenAIPernalTestAnalysis,
+  postOpenAIPernalTestSave,
   getClearCookies,
   postOpenAIConsultingLogSave,
   postOpenAIUserEBTResultData,
@@ -57,7 +58,7 @@ router.post("/emotion", postOpenAIEmotionAnalyze);
 // EBT 결과 분석
 router.post("/analysis", postOpenAIPsychologicalAnalysis);
 // PT 결과 분석
-router.post("/analysis_pt", postOpenAIPernalTestAnalysis);
+router.post("/analysis_pt", postOpenAIPernalTestSave);
 
 // 공감친구 모델 - 푸푸
 router.post(

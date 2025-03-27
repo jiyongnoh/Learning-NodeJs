@@ -49,61 +49,61 @@ const youtube = google.youtube({
 const drive = google.drive({ version: "v3", auth: auth_google_drive });
 
 // google drive 파일 전체 조회 메서드
-async function listFiles() {
-  try {
-    const res = await drive.files.list({
-      pageSize: 10,
-      fields: "nextPageToken, files(id, name)",
-    });
+// async function listFiles() {
+//   try {
+//     const res = await drive.files.list({
+//       pageSize: 10,
+//       fields: "nextPageToken, files(id, name)",
+//     });
 
-    const files = res.data.files;
-    if (files.length) {
-      console.log("Files:");
-      files.map((file) => {
-        console.log(`${file.name} (${file.id})`);
-      });
-    } else {
-      console.log("No files found.");
-    }
-  } catch (error) {
-    console.error(`An error occurred: ${error}`);
-  }
-}
+//     const files = res.data.files;
+//     if (files.length) {
+//       console.log("Files:");
+//       files.map((file) => {
+//         console.log(`${file.name} (${file.id})`);
+//       });
+//     } else {
+//       console.log("No files found.");
+//     }
+//   } catch (error) {
+//     console.error(`An error occurred: ${error}`);
+//   }
+// }
 // listFiles();
 
 // google drive 파일 전체 삭제 메서드
-async function deleteAllFiles() {
-  try {
-    // 파일 목록 가져오기
-    const res = await drive.files.list({
-      pageSize: 1000, // 한 번에 최대 1000개의 파일 가져오기
-      fields: "files(id, name)",
-    });
+// async function deleteAllFiles() {
+//   try {
+//     // 파일 목록 가져오기
+//     const res = await drive.files.list({
+//       pageSize: 1000, // 한 번에 최대 1000개의 파일 가져오기
+//       fields: "files(id, name)",
+//     });
 
-    const files = res.data.files;
-    if (files.length === 0) {
-      console.log("No files found.");
-      return;
-    }
+//     const files = res.data.files;
+//     if (files.length === 0) {
+//       console.log("No files found.");
+//       return;
+//     }
 
-    // 파일 삭제
-    for (const file of files) {
-      try {
-        await drive.files.delete({ fileId: file.id });
-        console.log(`Deleted file: ${file.name} (${file.id})`);
-      } catch (error) {
-        console.error(
-          `Failed to delete file: ${file.name} (${file.id})`,
-          error.message
-        );
-      }
-    }
+//     // 파일 삭제
+//     for (const file of files) {
+//       try {
+//         await drive.files.delete({ fileId: file.id });
+//         console.log(`Deleted file: ${file.name} (${file.id})`);
+//       } catch (error) {
+//         console.error(
+//           `Failed to delete file: ${file.name} (${file.id})`,
+//           error.message
+//         );
+//       }
+//     }
 
-    console.log("All files deleted successfully.");
-  } catch (error) {
-    console.error("An error occurred while deleting files:", error.message);
-  }
-}
+//     console.log("All files deleted successfully.");
+//   } catch (error) {
+//     console.error("An error occurred while deleting files:", error.message);
+//   }
+// }
 // deleteAllFiles();
 
 // 동기식 DB 접근 함수 1. Promise 생성 함수
@@ -147,12 +147,12 @@ const {
   ebt_Analysis,
 } = require("../DB/psy_test");
 
-const {
-  base_pupu,
-  base_soyes,
-  base_lala,
-  base_pupu_v2,
-} = require("../DB/base_prompt");
+// const {
+//   base_pupu,
+//   base_soyes,
+//   base_lala,
+//   base_pupu_v2,
+// } = require("../DB/base_prompt");
 
 // 프롬프트 관련
 const {
@@ -197,12 +197,12 @@ const {
 } = require("../DB/test_prompt");
 
 // 인지행동 검사 관련
-const {
-  cb_test_friend,
-  cb_test_family,
-  cb_test_school,
-  cb_test_remain,
-} = require("../DB/cognitive_behavior_test");
+// const {
+//   cb_test_friend,
+//   cb_test_family,
+//   cb_test_school,
+//   cb_test_remain,
+// } = require("../DB/cognitive_behavior_test");
 
 // 텍스트 감지 관련
 const {
@@ -295,11 +295,6 @@ const select_soyesAI_EbtResult_v2 = async (keyValue, contentKey, parsepUid) => {
     return "Error";
   }
 };
-
-// 숫자 확인용 함수
-function isNum(val) {
-  return !isNaN(val);
-}
 
 const openAIController = {
   // 감정 분석 AI
@@ -702,21 +697,20 @@ const openAIController = {
       res.status(500).json({ message: "Server Error - 500 Bad Gateway" });
     }
   },
-  // PT 결과 분석 및 DB 저장 및 메일 전송 API
+  // PT 결과 DB 저장 API
   postOpenAIPernalTestAnalysis: async (req, res) => {
     const { PTDataSend } = req.body; // 클라이언트 한계로 데이터 묶음으로 받기.
 
-    let parsePTData,
-      parsePTResult,
-      yourMailAddr = "";
+    let parsePTData, parsePTResult;
+
     try {
       // 파싱. Client JSON 데이터
       if (typeof PTDataSend === "string") {
         parsePTData = JSON.parse(PTDataSend);
       } else parsePTData = PTDataSend;
 
-      const { resultText, pUid } = parsePTData;
       console.log(parsePTData);
+      const { resultText, pUid } = parsePTData;
 
       // No type => return
       if (!resultText) {
@@ -753,53 +747,6 @@ const openAIController = {
           `,
       });
 
-      /*
-      const user_table = "soyes_ai_User";
-      const user_attr = {
-        pKey: "uid",
-        attr1: "email",
-      };
-
-      const select_query = `SELECT * FROM ${user_table} WHERE ${user_attr.pKey}='${pUid}'`;
-      await fetchUserData(connection_AI, select_query);
-      console.log("받는사람: " + yourMailAddr);
-
-      yourMailAddr = "soyesnjy@gmail.com"; // dummy email. 받는사람
-      
-      // 보내는 사람 계정 로그인
-      myMailAddr = process.env.ADDR_MAIL; // 보내는 사람 메일 주소
-      myMailPwd = process.env.ADDR_PWD; // 구글 계정 2단계 인증 비밀번호
-
-      const transporter = nodemailer.createTransport({
-        service: "gmail", // 사용할 이메일 서비스
-        // host: "smtp.gmail.com",
-        // port: 587,
-        // secure: false,
-        auth: {
-          user: myMailAddr, // 보내는 이메일 주소
-          pass: myMailPwd, // 이메일 비밀번호
-        },
-      });
-      
-      yourMailAddr = "soyesnjy@gmail.com"; // dummy email. 받는사람
-      */
-
-      // 보내는 사람 계정 로그인
-      const myMailAddr = process.env.ADDR_MAIL; // 보내는 사람 메일 주소
-      const myMailPwd = process.env.ADDR_PWD; // 구글 계정 2단계 인증 비밀번호
-
-      const transporter = nodemailer.createTransport({
-        service: "gmail", // 사용할 이메일 서비스
-        // host: "smtp.gmail.com",
-        // port: 587,
-        // secure: false,
-        auth: {
-          user: myMailAddr, // 보내는 이메일 주소
-          pass: myMailPwd, // 이메일 비밀번호
-        },
-      });
-      // 메일 관련 세팅 끝
-
       // AI 분석
       const response = await openai.chat.completions.create({
         messages: [...analysisPrompt, ...userPrompt],
@@ -808,30 +755,6 @@ const openAIController = {
       });
 
       const message = { message: response.choices[0].message.content };
-      // AI 분석 내용 보기좋게 정리
-      const analyzeMsg = message.message.split(". ").join(".\n");
-
-      // 메일 제목 및 내용 + 보내는사람 + 받는사람
-      const mailOptions = {
-        from: myMailAddr,
-        to: yourMailAddr,
-        subject: "성격 검사 AI 상담 분석 결과입니다",
-        text: `${analyzeMsg}`,
-        // attachments : 'logo.png' // 이미지 첨부 속성
-      };
-
-      /* 메일 전송 봉인
-      // 메일 전송 (비동기)
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log("Mail Send Fail!");
-          res.json("Mail Send Fail!");
-        } else {
-          console.log("Mail Send Success!");
-          console.log(info.envelope);
-        }
-      });
-      */
 
       // client 전송
       res.json({ message: mailOptions.text });
@@ -850,10 +773,10 @@ const openAIController = {
       // soyes_ai_Pt Table 삽입
       // 1. SELECT TEST (row가 있는지 없는지 검사)
       const select_query = `SELECT * FROM ${pt_table} WHERE ${pt_attribute.pKey}='${parsepUid}'`;
-      const ebt_data = await fetchUserData(connection_AI, select_query);
+      const pt_data = await fetchUserData(connection_AI, select_query);
 
       // 2. UPDATE TEST (row값이 있는 경우 실행)
-      if (ebt_data[0]) {
+      if (pt_data[0]) {
         const update_query = `UPDATE ${pt_table} SET ${Object.values(
           pt_attribute
         )
@@ -936,6 +859,72 @@ const openAIController = {
     } catch (err) {
       console.log(err);
       res.json({ message: "Server Error - 500 Bad Gateway" });
+    }
+  },
+  // PT 결과 저장 API (GPT 분석 없이 성격검사 결과를 저장만 하는 API)
+  postOpenAIPernalTestSave: async (req, res) => {
+    const { data } = req.body; // 클라이언트 한계로 데이터 묶음으로 받기.
+
+    let parseData;
+    try {
+      // 파싱. Client JSON 데이터
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { resultText, pUid } = parseData;
+      console.log(`PT 테스트 결과 저장 API 호출 - pUid: ${pUid}`);
+      console.log(parseData);
+
+      // No type => return
+      if (!resultText) {
+        console.log("No resultText input value - 404");
+        return res
+          .status(404)
+          .json({ message: "No resultText input value - 404" });
+      }
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 404");
+        return res.status(404).json({ message: "No pUid input value - 404" });
+      }
+
+      parsepUid = pUid;
+
+      // 오늘 날짜 변환
+      const dateObj = new Date();
+      const year = dateObj.getFullYear();
+      const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+      const day = ("0" + dateObj.getDate()).slice(-2);
+      const date = `${year}-${month}-${day}`;
+
+      /* PT_Log DB 저장 */
+      const pt_log_table = PT_Table_Info["Log"].table;
+
+      const pt_insert_query = `INSERT INTO ${pt_log_table}
+      (uid, date, persanl_result)
+      VALUES (?, ?, ?)`;
+
+      const pt_insert_value = [parsepUid, date, resultText];
+      // console.log(insert_value);
+
+      connection_AI.query(pt_insert_query, pt_insert_value, (err) => {
+        if (err) {
+          console.log("PT Analysis Data DB Save Fail!");
+          console.log("Err sqlMessage: " + err.sqlMessage);
+        }
+        console.log("AI Analysis Data LOG DB INSERT Success!");
+        // client 전송
+        return res
+          .status(200)
+          .json({ message: "AI Analysis Data LOG DB INSERT Success!" });
+      });
+    } catch (err) {
+      delete err.headers;
+      console.error(err);
+      return res.status(500).json({
+        message: `Server Error : ${err.message}`,
+      });
     }
   },
   // 공감친구 모델 - 푸푸
