@@ -346,6 +346,14 @@ const PT_Table_Info = {
     },
   },
 };
+const CT_Table_Info = {
+  Main: {
+    table: "soyes_ai_CT",
+    attribute: {
+      pKey: "uid",
+    },
+  },
+};
 const Consult_Table_Info = {
   Analysis: {
     table: "soyes_ai_User_Consult_Analysis",
@@ -406,6 +414,7 @@ module.exports = {
   Plan_Table_Info,
   EBT_Table_Info,
   PT_Table_Info,
+  CT_Table_Info,
   Consult_Table_Info,
   Review_Table_Info,
   Ella_Training_Table_Info,

@@ -23,12 +23,12 @@
           transform-origin: bottom left;
           z-index: 2;
           position: absolute;
-          white-space: pre;
+          white-space: nowrap;
           overflow: visible;
           line-height: 1.5;
         }
         .text-container {
-          white-space: pre;
+          white-space: nowrap;
         }
         @supports (-webkit-touch-callout: none) {
           .text-container {
@@ -283,17 +283,19 @@
       <style id="fonts2" type="text/css">
         @font-face {
           font-family: AppleSDGothicNeoB00_6b;
-          src: url("/fonts/AppleSDGothicNeoB00_6b.woff") format("woff");
+          src: url("<%= report_url %>/fonts/AppleSDGothicNeoB00_6b.woff")
+            format("woff");
         }
 
         @font-face {
           font-family: AppleSDGothicNeoR00_6k;
-          src: url("/fonts/AppleSDGothicNeoR00_6k.woff") format("woff");
+          src: url("<%= report_url %>/fonts/AppleSDGothicNeoR00_6k.woff")
+            format("woff");
         }
 
         @font-face {
           font-family: BMJUA_4n;
-          src: url("/fonts/BMJUA_4n.woff") format("woff");
+          src: url("<%= report_url %>/fonts/BMJUA_4n.woff") format("woff");
         }
       </style>
       <!-- End embedded font definitions -->
@@ -311,10 +313,10 @@
         "
       ></div>
       <div id="pg2" style="-webkit-user-select: none">
-        <!-- <object
+        <object
           width="909"
           height="1286"
-          data="2/2.svg"
+          data="<%= report_url %>/2/2.svg"
           type="image/svg+xml"
           id="pdf2"
           style="
@@ -323,31 +325,22 @@
             -moz-transform: scale(1);
             z-index: 0;
           "
-        ></object> -->
-        <img
-          src="/2/2.svg"
-          alt="SVG Image"
-          width="909"
-          height="1286"
-          style="width: 909px; height: 1286px"
-        />
+        ></object>
       </div>
       <!-- End page background -->
 
       <!-- Begin text definitions (Positioned/styled in CSS) -->
       <div class="text-container">
         <span id="t1_2" class="t s0_2">심리 검사 결과 </span>
-
         <span id="t2_2" class="t s1_2">일일 모니터링 (Mental Monitoring) </span>
         <span id="t3_2" class="t s2_2"
-          >우리 아이 기분이 어땠는지, 친구들과는 잘 지냈는지, 공부하는 건
-          어떤지를 살펴봐요. 행복하게(기분),
-        </span>
+          >우리 아이 기분이 어땠는지, 친구들과는 잘 지냈는지, 공부하는
+          건어떤지를 살펴봐요. 행복하게(기분),</span
+        >
         <span id="t4_2" class="t s2_2"
-          >주어진 환경(친구, 가족, 학교)에 적응하는 것은 마음 건강의 주요한
-          지표예요.
+          >주어진 환경(친구, 가족, 학교)에 적응하는 것은 마음 건강의
+          주요한지표예요.
         </span>
-
         <span id="t5_2" class="t s3_2">기 </span>
         <span id="t6_2" class="t s3_2">분 </span>
         <span id="t7_2" class="t s4_2">1회차 </span
@@ -381,15 +374,16 @@
         ><span id="tw_2" class="t sa_2">5회차 </span>
       </div>
       <!-- End text definitions -->
+
       <!-- 첫 번째 차트 -->
       <canvas id="myChart1" style="width: 420px; height: 210px"></canvas>
+
       <!-- 두 번째 차트 -->
       <canvas id="myChart2" style="width: 420px; height: 210px"></canvas>
-      <!-- 세 번째 차트 -->
       <canvas id="myChart3" style="width: 420px; height: 210px"></canvas>
-      <!-- 네 번째 차트 -->
       <canvas id="myChart4" style="width: 420px; height: 210px"></canvas>
     </div>
+
     <script>
       const ctx = document.getElementById("myChart1").getContext("2d");
       const myChart1 = new Chart(ctx, {
@@ -399,25 +393,28 @@
           datasets: [
             {
               label: "기분 변화",
-              data: <%= moodData %>, // moodData를 동적으로 받아서 사용
-              borderColor: "red",
+              data: <%= moodData %>, // 꺾은선 데이터
+              borderColor: "green", // 선 색상
               borderWidth: 2,
-              fill: false,
-              pointBackgroundColor: "red",
-              pointRadius: 10,
+              fill: false, // 선 아래 색상 채우기 여부
+              pointBackgroundColor: "green", // 포인트 색상
+              tension: 0.4, // 부드러운 곡선을 위한 tension 값 설정
+              pointRadius: 10, // 포인트 크기
             },
           ],
         },
         options: {
-          responsive: false,
+          responsive: false, // 크기 자동 조정 비활성화
           scales: {
-            x: { display: false },
+            x: {
+              display: false, // x축 레이블 숨기기
+            },
             y: {
-              display: false,
+              display: false, // y축 레이블 숨기기
               beginAtZero: true,
-              max: 6, // y축 최대값 설정
+              max: 4, // y축 최대값 설정
               ticks: {
-                stepSize: 1,
+                stepSize: 1, // y축 간격 설정
                 callback: function (value) {
                   const labels = [
                     "매우 힘들다",
@@ -426,12 +423,16 @@
                     "괜찮다",
                     "아주 괜찮다",
                   ];
-                  return labels[value - 1];
+                  return labels[value - 1]; // y축에 해당 텍스트 표시
                 },
               },
             },
           },
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: {
+              display: false, // 레전드 숨기기
+            },
+          },
         },
       });
 
@@ -448,6 +449,7 @@
               borderWidth: 2,
               fill: false, // 선 아래 색상 채우기 여부
               pointBackgroundColor: "red", // 포인트 색상
+              tension: 0.4, // 부드러운 곡선을 위한 tension 값 설정
               pointRadius: 10, // 포인트 크기
             },
           ],
@@ -461,7 +463,7 @@
             y: {
               display: false, // y축 레이블 숨기기
               beginAtZero: true,
-              max: 6, // y축 최대값 설정
+              max: 4, // y축 최대값 설정
               ticks: {
                 stepSize: 1, // y축 간격 설정
                 callback: function (value) {
@@ -493,11 +495,12 @@
           datasets: [
             {
               label: "기분 변화",
-              data: <%= familyData %>, // {{familyData}}, // 꺾은선 데이터
-              borderColor: "red", // 선 색상
+              data: <%= familyData %>, // 꺾은선 데이터
+              borderColor: "blue", // 선 색상
               borderWidth: 2,
               fill: false, // 선 아래 색상 채우기 여부
-              pointBackgroundColor: "red", // 포인트 색상
+              pointBackgroundColor: "blue", // 포인트 색상
+              tension: 0.4, // 부드러운 곡선을 위한 tension 값 설정
               pointRadius: 10, // 포인트 크기
             },
           ],
@@ -511,7 +514,7 @@
             y: {
               display: false, // y축 레이블 숨기기
               beginAtZero: true,
-              max: 6, // y축 최대값 설정
+              max: 4, // y축 최대값 설정
               ticks: {
                 stepSize: 1, // y축 간격 설정
                 callback: function (value) {
@@ -543,12 +546,13 @@
           datasets: [
             {
               label: "기분 변화",
-              data: <%= schoolData %>, //{{schoolData}}, // 꺾은선 데이터
-              borderColor: "red", // 선 색상
+              data: <%= schoolData %>, // 꺾은선 데이터
+              borderColor: "orange", // 선 색상
               borderWidth: 2,
               fill: false, // 선 아래 색상 채우기 여부
-              pointBackgroundColor: "red", // 포인트 색상
+              pointBackgroundColor: "orange", // 포인트 색상
               pointRadius: 10, // 포인트 크기
+              tension: 0.4, // 부드러운 곡선을 위한 tension 값 설정
             },
           ],
         },
@@ -561,7 +565,7 @@
             y: {
               display: false, // y축 레이블 숨기기
               beginAtZero: true,
-              max: 6, // y축 최대값 설정
+              max: 4, // y축 최대값 설정
               ticks: {
                 stepSize: 1, // y축 간격 설정
                 callback: function (value) {

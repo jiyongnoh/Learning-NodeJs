@@ -7,6 +7,12 @@ const { dbconfig_ai } = require("../DB/database");
 // Redis 연결
 // const redisStore = require("../DB/redisClient");
 
+// 결과보고서 관련
+const puppeteer = require("puppeteer");
+const ejs = require("ejs");
+const path = require("path");
+const { PDFDocument } = require("pdf-lib");
+
 // AI DB 연결
 const connection_AI = mysql.createConnection(dbconfig_ai);
 connection_AI.connect();
@@ -197,12 +203,13 @@ const {
 } = require("../DB/test_prompt");
 
 // 인지행동 검사 관련
-// const {
-//   cb_test_friend,
-//   cb_test_family,
-//   cb_test_school,
-//   cb_test_remain,
-// } = require("../DB/cognitive_behavior_test");
+const {
+  ebtResultMap,
+  ptResultMap,
+  friendMap,
+  careerMap,
+  carrerTypeMap,
+} = require("../DB/report_data");
 
 // 텍스트 감지 관련
 const {
@@ -221,6 +228,7 @@ const {
   User_Table_Info,
   EBT_Table_Info,
   PT_Table_Info,
+  CT_Table_Info,
   Consult_Table_Info,
   Ella_Training_Table_Info,
   North_Table_Info,
@@ -2886,10 +2894,478 @@ const NorthController = {
     }
   },
 };
+// 결과보고서 (Web)
+const reportController = {
+  postReportTest: async (req, res) => {
+    const { data } = req.body;
+    const pdfBuffers = []; // 각 PDF의 버퍼를 저장할 배열
+    let parsepUid, parseName, parseEmail, parseAge, parseGender;
+    try {
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { pUid, name, email, age, gender } = parseData;
+      console.log(`결과보고서 발송 API /report Path 호출 - pUid: ${pUid}`);
+      console.log(parseData);
+
+      // No pUid => return
+      if (!pUid || !name || !email || !age || !gender) {
+        console.log("No Required input value - 400");
+        return res
+          .status(400)
+          .json({ message: "No Required input value - 400" });
+      }
+
+      parsepUid = pUid;
+      parseName = name;
+      parseEmail = email;
+      parseAge = age;
+      parseGender = gender;
+
+      // PDF 결합 함수
+      async function mergePDFs(pdfBuffers) {
+        const mergedPdf = await PDFDocument.create();
+
+        for (const buffer of pdfBuffers) {
+          const pdf = await PDFDocument.load(buffer);
+
+          // 페이지를 복사하고 병합
+          const copiedPages = await mergedPdf.copyPages(
+            pdf,
+            pdf.getPageIndices()
+          );
+          copiedPages.forEach((page) => mergedPdf.addPage(page));
+        }
+
+        const mergedPdfBytes = await mergedPdf.save();
+        return mergedPdfBytes;
+      }
+
+      // DB Data Select
+      let selectData = {
+        report_url: process.env.REPORT_URL,
+      };
+
+      // console.log(process.env.REPORT_URL);
+
+      // Page 1 Data
+      const dateObj = new Date();
+      const year = dateObj.getFullYear();
+      const month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+      const day = ("0" + dateObj.getDate()).slice(-2);
+      const date = `${year}-${month}-${day}`;
+
+      // Page 2 Data
+      const north_table = North_Table_Info.table;
+      const select_north_join_query = `SELECT JSON_OBJECT(
+  'mood_data', IFNULL((SELECT JSON_ARRAYAGG(north_mental_data)
+                FROM (SELECT north_mental_data
+                      FROM ${north_table}
+                      WHERE uid = '${parsepUid}' AND north_diary_tag = 'mood'
+                      ORDER BY created_at DESC
+                      LIMIT 5) AS mood), JSON_ARRAY()),
+  'friend_data', IFNULL((SELECT JSON_ARRAYAGG(north_mental_data)
+                  FROM (SELECT north_mental_data
+                        FROM ${north_table}
+                        WHERE uid = '${parsepUid}' AND north_diary_tag = 'friend'
+                        ORDER BY created_at DESC
+                        LIMIT 5) AS friend), JSON_ARRAY()),
+  'family_data', IFNULL((SELECT JSON_ARRAYAGG(north_mental_data)
+                  FROM (SELECT north_mental_data
+                        FROM ${north_table}
+                        WHERE uid = '${parsepUid}' AND north_diary_tag = 'family'
+                        ORDER BY created_at DESC
+                        LIMIT 5) AS family), JSON_ARRAY()),
+  'school_data', IFNULL((SELECT JSON_ARRAYAGG(north_mental_data)
+                  FROM (SELECT north_mental_data
+                        FROM ${north_table}
+                        WHERE uid = '${parsepUid}' AND north_diary_tag = 'school'
+                        ORDER BY created_at DESC
+                        LIMIT 5) AS school), JSON_ARRAY())
+) AS result;
+`;
+      const north_join_data = await fetchUserData(
+        connection_AI,
+        select_north_join_query
+      );
+      const page2_data = JSON.parse(north_join_data[0].result);
+
+      // Page 3,4 Data
+      const page3_data = await select_soyesAI_EbtResult_v2("", true, parsepUid);
+      // console.log(page3_data);
+
+      // Page 5,6 Data
+      const pt_log_table = PT_Table_Info["Log"].table;
+      const select_pt_query = `SELECT 
+      persanl_result FROM ${pt_log_table} 
+      WHERE uid = '${parsepUid}' 
+      ORDER BY created_at DESC LIMIT 1;`;
+
+      const pt_data = await fetchUserData(connection_AI, select_pt_query);
+      const page5_data = pt_data[0];
+
+      // Page 7 Data
+      // const mood_table = Ella_Training_Table_Info["Mood"].table;
+      // const anxiety_table = Ella_Training_Table_Info["Anxiety"].table;
+
+      // const mood_select_query = `SELECT
+      // mood_rating_first,
+      // mood_rating_second,
+      // mood_rating_third,
+      // mood_rating_fourth
+      // FROM ${mood_table} WHERE uid = '${parsepUid}'
+      // ORDER BY created_at DESC LIMIT 1;`;
+
+      // const mood_select_data = await fetchUserData(
+      //   connection_AI,
+      //   mood_select_query
+      // );
+      // const page7_mood_data = mood_select_data[0]
+      //   ? Object.values(mood_select_data[0]).filter((el) => el)
+      //   : [];
+
+      // const anxiety_select_query = `SELECT
+      // anxiety_rating_first,
+      // anxiety_rating_second,
+      // anxiety_rating_third,
+      // anxiety_rating_fourth,
+      // anxiety_rating_fifth
+      // FROM ${anxiety_table} WHERE uid = '${parsepUid}'
+      // ORDER BY created_at DESC LIMIT 1;`;
+
+      // const anxiety_select_data = await fetchUserData(
+      //   connection_AI,
+      //   anxiety_select_query
+      // );
+      // const page7_anxiety_data = anxiety_select_data[0]
+      //   ? Object.values(anxiety_select_data[0]).filter((el) => el)
+      //   : [];
+
+      // // Page 8 Data
+      // const friend_table = Ella_Training_Table_Info["Friend"].table;
+      // const friend_select_query = `SELECT
+      // friend_result
+      // FROM ${friend_table}
+      // WHERE uid = '${parsepUid}' AND friend_type = 'friend_test'
+      // ORDER BY created_at DESC LIMIT 1;`;
+
+      // const friend_select_data = await fetchUserData(
+      //   connection_AI,
+      //   friend_select_query
+      // );
+      // const page8_friend_data = friend_select_data[0]?.friend_result;
+
+      // Page Career Data
+      const ct_table = CT_Table_Info["Main"].table;
+      const ct_select_query = `SELECT 
+      ct_career_first,
+      ct_career_second,
+      ct_career_third
+      FROM ${ct_table}
+      WHERE uid ='${parsepUid}'
+      ORDER BY ct_created_at DESC
+      LIMIT 1`;
+
+      const ct_select_data = await fetchUserData(
+        connection_AI,
+        ct_select_query
+      );
+
+      const { ct_career_first, ct_career_second, ct_career_third } =
+        ct_select_data.length
+          ? ct_select_data[0]
+          : { ct_career_first: -1, ct_career_second: -1, ct_career_third: -1 };
+      // console.log(ct_career_first, ct_career_second, ct_career_third);
+
+      // Page 9 Data
+      const pupu_table = Consult_Table_Info["Log"].table;
+      const pupu_select_query = `SELECT consult_log FROM ${pupu_table} WHERE uid ='${parsepUid}' ORDER BY created_at DESC LIMIT 3`; // 가장 최근 검사 결과를 조회하는 경우
+
+      const pupu_select_data = await fetchUserData(
+        connection_AI,
+        pupu_select_query
+      );
+
+      const page9_pupu_data = pupu_select_data
+        .map((el) => JSON.parse(el.consult_log))
+        .map((el) => (el.length > 0 ? el[el.length - 1].content : ""));
+
+      // Select Data 갱신
+      selectData = {
+        ...selectData,
+        // page 1
+        reportDate: date,
+        name: parseName,
+        age: parseAge,
+        gender: parseGender,
+        // page 2
+        moodData: JSON.stringify(page2_data.mood_data.map((el) => el + 1)),
+        friendData: JSON.stringify(page2_data.friend_data.map((el) => el + 1)),
+        familyData: JSON.stringify(page2_data.family_data.map((el) => el + 1)),
+        schoolData: JSON.stringify(page2_data.school_data.map((el) => el + 1)),
+        // page 3
+        ebt_school: page3_data[0]?.content?.slice(0, 135),
+        ebt_school_result: ebtResultMap[page3_data[0]?.result || "default"],
+        ebt_friend: page3_data[1]?.content?.slice(0, 135),
+        ebt_friend_result: ebtResultMap[page3_data[1]?.result || "default"],
+        ebt_family: page3_data[2]?.content?.slice(0, 135),
+        ebt_family_result: ebtResultMap[page3_data[2]?.result || "default"],
+        ebt_tScores: JSON.stringify(
+          page3_data.length > 0
+            ? page3_data.map((el) => el.tScore || 50)
+            : [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+        ),
+        // page 4
+        ebt_self: page3_data[3]?.content?.slice(0, 130),
+        ebt_self_result: ebtResultMap[page3_data[3]?.result || "default"],
+        ebt_unrest: page3_data[4]?.content?.slice(0, 130),
+        ebt_unrest_result: ebtResultMap[page3_data[4]?.result || "default"],
+        ebt_sad: page3_data[5]?.content?.slice(0, 130),
+        ebt_sad_result: ebtResultMap[page3_data[5]?.result || "default"],
+        ebt_health: page3_data[6]?.content?.slice(0, 130),
+        ebt_health_result: ebtResultMap[page3_data[6]?.result || "default"],
+        ebt_attention: page3_data[7]?.content?.slice(0, 130),
+        ebt_attention_result: ebtResultMap[page3_data[7]?.result || "default"],
+        ebt_movement: page3_data[8]?.content?.slice(0, 130),
+        ebt_movement_result: ebtResultMap[page3_data[8]?.result || "default"],
+        ebt_mood: page3_data[9]?.content?.slice(0, 130),
+        ebt_mood_result: ebtResultMap[page3_data[9]?.result || "default"],
+        ebt_angry: page3_data[10]?.content?.slice(0, 130),
+        ebt_angry_result: ebtResultMap[page3_data[10]?.result || "default"],
+        // page 5
+        persnalResult: page5_data?.persanl_result || "pt_default",
+        result_first: page5_data?.persanl_result[0] || "pt_detail_default",
+        result_second: page5_data?.persanl_result[1] || "pt_detail_default",
+        result_third: page5_data?.persanl_result[2] || "pt_detail_default",
+        result_fourth: page5_data?.persanl_result[3] || "pt_detail_default",
+        // page 6
+        result_first_ment:
+          ptResultMap[page5_data?.persanl_result[0] || "default"],
+        result_second_ment:
+          ptResultMap[page5_data?.persanl_result[1] || "default"],
+        result_third_ment:
+          ptResultMap[page5_data?.persanl_result[2] || "default"],
+        result_fourth_ment:
+          ptResultMap[page5_data?.persanl_result[3] || "default"],
+        // page 7
+        // mood_scores: JSON.stringify(page7_mood_data),
+        // anxiety_scores: JSON.stringify(page7_anxiety_data),
+        // // page 8
+        // friend_result: friendMap[page8_friend_data || "default"]?.category,
+        // friend_result_img: page8_friend_data || "default",
+        // friend_result_ment: friendMap[page8_friend_data || "default"]?.ment,
+        // page Career
+        // first
+        career_first_career_id:
+          ct_career_first !== -1
+            ? careerMap[ct_career_first].careerId
+            : "default",
+        career_first_name:
+          ct_career_first !== -1
+            ? careerMap[ct_career_first].careerName
+            : "default",
+        career_first_content:
+          ct_career_first !== -1
+            ? careerMap[ct_career_first].careerIntroduce
+            : "default",
+        career_first_type_sub_content:
+          ct_career_first !== -1
+            ? carrerTypeMap[careerMap[ct_career_first].careerType].subContent
+            : "default",
+        career_first_type_main_content:
+          ct_career_first !== -1
+            ? carrerTypeMap[careerMap[ct_career_first].careerType].mainContent
+            : "default",
+        career_first_type:
+          ct_career_first !== -1
+            ? careerMap[ct_career_first].careerType
+            : "default",
+        career_first_es_content:
+          ct_career_first !== -1
+            ? carrerTypeMap[
+                careerMap[ct_career_first].careerType
+              ].esContent.slice(1)
+            : "default",
+        career_first_carrer_abilitys:
+          ct_career_first !== -1
+            ? careerMap[ct_career_first].carrerAbility.join(", ")
+            : "default",
+        // second
+        career_second_career_id:
+          ct_career_second !== -1
+            ? careerMap[ct_career_second].careerId
+            : "default",
+        career_second_name:
+          ct_career_second !== -1
+            ? careerMap[ct_career_second].careerName
+            : "default",
+        career_second_content:
+          ct_career_second !== -1
+            ? careerMap[ct_career_second].careerIntroduce
+            : "default",
+        career_second_type_sub_content:
+          ct_career_second !== -1
+            ? carrerTypeMap[careerMap[ct_career_second].careerType].subContent
+            : "default",
+        career_second_type_main_content:
+          ct_career_second !== -1
+            ? carrerTypeMap[careerMap[ct_career_second].careerType].mainContent
+            : "default",
+        career_second_type:
+          ct_career_second !== -1
+            ? careerMap[ct_career_second].careerType
+            : "default",
+        career_second_es_content:
+          ct_career_second !== -1
+            ? carrerTypeMap[
+                careerMap[ct_career_second].careerType
+              ].esContent.slice(1)
+            : "default",
+        career_second_carrer_abilitys:
+          ct_career_second !== -1
+            ? careerMap[ct_career_second].carrerAbility.join(", ")
+            : "default",
+        // third
+        career_third_career_id:
+          ct_career_third !== -1
+            ? careerMap[ct_career_third].careerId
+            : "default",
+        career_third_name:
+          ct_career_third !== -1
+            ? careerMap[ct_career_third].careerName
+            : "default",
+        career_third_content:
+          ct_career_third !== -1
+            ? careerMap[ct_career_third].careerIntroduce
+            : "default",
+        career_third_type_sub_content:
+          ct_career_third !== -1
+            ? carrerTypeMap[careerMap[ct_career_third].careerType].subContent
+            : "default",
+        career_third_type_main_content:
+          ct_career_third !== -1
+            ? carrerTypeMap[careerMap[ct_career_third].careerType].mainContent
+            : "default",
+        career_third_type:
+          ct_career_third !== -1
+            ? careerMap[ct_career_third].careerType
+            : "default",
+        career_third_es_content:
+          ct_career_third !== -1
+            ? carrerTypeMap[
+                careerMap[ct_career_third].careerType
+              ].esContent.slice(1)
+            : "default",
+        career_third_carrer_abilitys:
+          ct_career_third !== -1
+            ? careerMap[ct_career_third].carrerAbility.join(", ")
+            : "default",
+
+        // page 9
+        pupu_analysis_1: page9_pupu_data[0]?.slice(0, 170),
+        pupu_analysis_2: page9_pupu_data[1]?.slice(0, 170),
+        pupu_analysis_3: page9_pupu_data[2]?.slice(0, 170),
+      };
+
+      // 변환할 EJS 파일들의 경로를 배열로 설정
+      const ejsFiles = [
+        "1.ejs",
+        "2.ejs",
+        "3.ejs",
+        "4.ejs",
+        "5.ejs",
+        "6.ejs",
+        "career.ejs",
+        // 엘라 제외
+        // "7.ejs",
+        // "8.ejs",
+        "9.ejs",
+      ];
+
+      // Puppeteer 브라우저 실행
+      const browser = await puppeteer.launch({
+        headless: true, // 백그라운드 모드로 실행
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--fontconfig"], // 샌드박스 모드 비활성화
+      });
+
+      for (const file of ejsFiles) {
+        const templatePath = path.join(
+          __dirname,
+          "..",
+          "src",
+          "report_final",
+          file
+        );
+        const htmlContent = await ejs.renderFile(templatePath, selectData);
+
+        const page = await browser.newPage();
+
+        await page.emulateMediaType("screen"); // 화면 스타일 적용
+
+        // 원하는 뷰포트 크기 설정
+        // await page.setViewport({
+        //   width: 909, // 너비 909px
+        //   height: 1986, // 높이 1986px
+        // });
+
+        await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+        // 개별 PDF 생성
+        const pdfBuffer = await page.pdf({
+          width: "909px",
+          height: "1286px",
+          printBackground: true,
+        });
+
+        pdfBuffers.push(pdfBuffer);
+      }
+
+      const mergedPdfBuffer = await mergePDFs(pdfBuffers);
+
+      await browser.close();
+
+      // 이메일 전송 설정
+      let myMailAddr = process.env.ADDR_MAIL; // 보내는 사람 메일 주소
+      let myMailPwd = process.env.ADDR_PWD; // 구글 계정 2단계 인증 비밀번호
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: myMailAddr,
+          pass: myMailPwd,
+        },
+      });
+
+      const mailOptions = {
+        from: "soyesnjy@gmail.com",
+        to: parseEmail,
+        subject: "SoyeAI 결과보고서",
+        text: "SoyeAI 결과보고서 입니다.",
+        attachments: [
+          {
+            filename: "Soyes_Report_Test.pdf",
+            content: mergedPdfBuffer,
+          },
+        ],
+      };
+
+      await transporter.sendMail(mailOptions);
+      return res.status(200).json({ message: "PDF sent successfully" });
+    } catch (err) {
+      delete err.headers;
+      console.error(err);
+      return res.status(500).json({
+        message: `Server Error : ${err.message}`,
+      });
+    }
+  },
+};
 
 module.exports = {
   openAIController,
   ellaMoodController,
   NorthController,
+  reportController,
   // openAIController_Regercy,
 };

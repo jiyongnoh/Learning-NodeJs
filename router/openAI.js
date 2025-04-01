@@ -7,6 +7,7 @@ const {
   openAIController,
   ellaMoodController,
   NorthController,
+  reportController,
   // openAIController_Regercy, // 레거시 코드
 } = require("../controller/openAI");
 
@@ -39,12 +40,15 @@ const {
   postOpenAIMoodDataLoad,
 } = ellaMoodController;
 
-// 엘라 Mood 훈련 Controler
+// 북극이 감정일기 Controler
 const {
   postOpenAIConsultingNorthSave,
   postOpenAIConsultingNorthLoad,
   postOpenAIConsultingNorthDelete,
 } = NorthController;
+
+// 북극이 감정일기 Controler
+const { postReportTest } = reportController;
 
 // 토큰 유효성 검사 미들웨어
 const { vaildateTokenConsulting, vaildatePlan } = loginController;
@@ -91,6 +95,9 @@ router.post("/north_save", postOpenAIConsultingNorthSave);
 router.post("/north_load", postOpenAIConsultingNorthLoad);
 // 북극이 데이터 Delete
 router.post("/north_delete", postOpenAIConsultingNorthDelete);
+
+// 결과보고서 PDF 이메일 발송
+router.post("/report", postReportTest);
 
 // 달력 데이터 반환
 router.post("/calendar", postOpenAIMypageCalendarData);

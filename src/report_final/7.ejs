@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta charset="utf-8" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+
+  <body style="margin: 0">
+    <div
+      id="p7"
+      style="
+        overflow: hidden;
+        position: relative;
+        background-color: white;
+        width: 909px;
+        height: 1286px;
+      "
+    >
+      <!-- Begin shared CSS values -->
+      <style class="shared-css" type="text/css">
+        .t {
+          transform-origin: bottom left;
+          z-index: 2;
+          position: absolute;
+          white-space: nowrap;
+          overflow: visible;
+          line-height: 1.5;
+        }
+        .text-container {
+          white-space: nowrap;
+        }
+        @supports (-webkit-touch-callout: none) {
+          .text-container {
+            white-space: normal;
+          }
+        }
+
+        .container {
+          position: relative;
+          width: 909px; /* 페이지의 너비 */
+          height: 1286px; /* 페이지의 높이 */
+          background-image: url("image.png"); /* 배경 이미지 설정 */
+          background-size: cover;
+          background-position: center;
+        }
+
+        canvas {
+          position: absolute;
+          left: 350px;
+          z-index: 2;
+        }
+
+        #myChart1 {
+          top: 200px;
+          width: 400px;
+          height: 480px;
+        }
+
+        #myChart2 {
+          top: 710px;
+          width: 400px;
+          height: 480px;
+        }
+      </style>
+      <!-- End shared CSS values -->
+
+      <!-- Begin inline CSS -->
+      <style type="text/css">
+        #t1_7 {
+          left: 278px;
+          bottom: 1134px;
+          letter-spacing: -1.51px;
+        }
+        #t2_7 {
+          left: 136px;
+          bottom: 1063px;
+          letter-spacing: -0.78px;
+        }
+        #t3_7 {
+          left: 229px;
+          bottom: 1065px;
+          letter-spacing: -0.67px;
+        }
+        #t4_7 {
+          left: 107px;
+          bottom: 1060px;
+        }
+        #t5_7 {
+          left: 140px;
+          bottom: 560px;
+          letter-spacing: -0.78px;
+        }
+        #t6_7 {
+          left: 259px;
+          bottom: 562px;
+          letter-spacing: -0.67px;
+        }
+        #t7_7 {
+          left: 107px;
+          bottom: 557px;
+        }
+        #t8_7 {
+          left: 221px;
+          bottom: 922px;
+          letter-spacing: -0.67px;
+        }
+        #t9_7 {
+          left: 221px;
+          bottom: 988px;
+          letter-spacing: -0.67px;
+        }
+        #ta_7 {
+          left: 352px;
+          bottom: 144px;
+          letter-spacing: -0.67px;
+        }
+        #tb_7 {
+          left: 445px;
+          bottom: 144px;
+          letter-spacing: -0.68px;
+        }
+        #tc_7 {
+          left: 540px;
+          bottom: 144px;
+          letter-spacing: -0.68px;
+        }
+        #td_7 {
+          left: 635px;
+          bottom: 144px;
+          letter-spacing: -0.68px;
+        }
+        #te_7 {
+          left: 731px;
+          bottom: 144px;
+          letter-spacing: -0.68px;
+        }
+
+        #tf_7 {
+          left: 349px;
+          bottom: 650px;
+          letter-spacing: -0.67px;
+        }
+        #tg_7 {
+          left: 439px;
+          bottom: 650px;
+          letter-spacing: -0.68px;
+        }
+        #th_7 {
+          left: 529px;
+          bottom: 650px;
+          letter-spacing: -0.68px;
+        }
+        #ti_7 {
+          left: 619px;
+          bottom: 650px;
+          letter-spacing: -0.68px;
+        }
+
+        #tj_7 {
+          left: 177px;
+          bottom: 650px;
+          letter-spacing: -0.68px;
+        }
+        #tk_7 {
+          left: 160px;
+          bottom: 144px;
+          letter-spacing: -0.67px;
+        }
+        #tl_7 {
+          left: 221px;
+          bottom: 724px;
+          letter-spacing: -0.67px;
+        }
+        #tm_7 {
+          left: 221px;
+          bottom: 790px;
+          letter-spacing: -0.67px;
+        }
+        #tn_7 {
+          left: 221px;
+          bottom: 856px;
+          letter-spacing: -0.68px;
+        }
+        #to_7 {
+          left: 221px;
+          bottom: 416px;
+          letter-spacing: -0.67px;
+        }
+        #tp_7 {
+          left: 221px;
+          bottom: 482px;
+          letter-spacing: -0.67px;
+        }
+        #tq_7 {
+          left: 221px;
+          bottom: 218px;
+          letter-spacing: -0.67px;
+        }
+        #tr_7 {
+          left: 221px;
+          bottom: 284px;
+          letter-spacing: -0.67px;
+        }
+        #ts_7 {
+          left: 221px;
+          bottom: 350px;
+          letter-spacing: -0.68px;
+        }
+
+        .s0_7 {
+          font-size: 43px;
+          font-family: BMJUA_4n;
+          color: #1a9479;
+        }
+        .s1_7 {
+          font-size: 23px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #545454;
+        }
+        .s2_7 {
+          font-size: 17px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #545454;
+        }
+        .s3_7 {
+          font-size: 26px;
+          font-family: AdobeMyungjoStd-Medium_6p;
+          color: #545454;
+        }
+        .s4_7 {
+          font-size: 17px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #1a9479;
+        }
+      </style>
+      <!-- End inline CSS -->
+
+      <!-- Begin embedded font definitions -->
+      <style id="fonts7" type="text/css">
+        @font-face {
+          font-family: AdobeMyungjoStd-Medium_6p;
+          src: url("<%= report_url %>/fonts/AdobeMyungjoStd-Medium_6p.woff")
+            format("woff");
+        }
+
+        @font-face {
+          font-family: AppleSDGothicNeoR00_6k;
+          src: url("<%= report_url %>/fonts/AppleSDGothicNeoR00_6k.woff")
+            format("woff");
+        }
+
+        @font-face {
+          font-family: BMJUA_4n;
+          src: url("<%= report_url %>/fonts/BMJUA_4n.woff") format("woff");
+        }
+      </style>
+      <!-- End embedded font definitions -->
+
+      <!-- Begin page background -->
+      <div
+        id="pg7Overlay"
+        style="
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          z-index: 1;
+          background-color: rgba(0, 0, 0, 0);
+          -webkit-user-select: none;
+        "
+      ></div>
+      <div id="pg7" style="-webkit-user-select: none">
+        <object
+          width="909"
+          height="1286"
+          data="<%= report_url %>/7/7.svg"
+          type="image/svg+xml"
+          id="pdf7"
+          style="
+            width: 909px;
+            height: 1286px;
+            -moz-transform: scale(1);
+            z-index: 0;
+          "
+        ></object>
+      </div>
+      <!-- End page background -->
+
+      <!-- Begin text definitions (Positioned/styled in CSS) -->
+      <div class="text-container">
+        <span id="t1_7" class="t s0_7">엘라 멘탈 헬스 트레이닝 </span>
+        <span id="t2_7" class="t s1_7">기분 케어 </span
+        ><span id="t3_7" class="t s2_7"
+          >불쾌한 기분은 줄이고 즐거운 기분은 늘리고 싶을 때
+        </span>
+        <!-- <span id="t4_7" class="t s3_7">Ⅰ </span> -->
+        <span id="t5_7" class="t s1_7">불안 케어 </span
+        ><span id="t6_7" class="t s2_7">불안을 다독이고 용기가 필요할 때 </span
+        ><span id="t7_7" class="t s3_7">Ⅱ </span>
+        <span id="t8_7" class="t s2_7">힘들다. </span>
+        <span id="t9_7" class="t s2_7">매우 힘들다. </span>
+        <span id="ta_7" class="t s4_7">미션1 </span
+        ><span id="tb_7" class="t s4_7">미션2 </span
+        ><span id="tc_7" class="t s4_7">미션3 </span
+        ><span id="td_7" class="t s4_7">미션4 </span
+        ><span id="te_7" class="t s4_7">미션5 </span>
+        <span id="tf_7" class="t s4_7">미션1 </span
+        ><span id="tg_7" class="t s4_7">미션2 </span
+        ><span id="th_7" class="t s4_7">미션3 </span
+        ><span id="ti_7" class="t s4_7">미션4 </span>
+        <!-- <span id="te_7" class="t s4_7">미션5 </span> -->
+        <span id="tj_7" class="t s4_7">우울감 변화 </span>
+        <span id="tk_7" class="t s4_7">불안 수준의 변화 </span>
+        <span id="tl_7" class="t s2_7">아주 괜찮다. </span>
+        <span id="tm_7" class="t s2_7">괜찮다. </span>
+        <span id="tn_7" class="t s2_7">보통이다. </span>
+        <span id="to_7" class="t s2_7">힘들다. </span>
+        <span id="tp_7" class="t s2_7">매우 힘들다. </span>
+        <span id="tq_7" class="t s2_7">아주 괜찮다. </span>
+        <span id="tr_7" class="t s2_7">괜찮다. </span>
+        <span id="ts_7" class="t s2_7">보통이다. </span>
+      </div>
+      <!-- End text definitions -->
+
+      <!-- 첫 번째 차트 -->
+      <canvas id="myChart1" style="width: 400px; height: 420px"></canvas>
+
+      <!-- 두 번째 차트 -->
+      <canvas id="myChart2" style="width: 400px; height: 420px"></canvas>
+    </div>
+
+    <script>
+      const ctx = document.getElementById("myChart1").getContext("2d");
+      const myChart1 = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: ["미션1", "미션2", "미션3", "미션4", "미션5"], // x축 레이블
+          datasets: [
+            {
+              label: "기분 변화",
+              data: <%= mood_scores %>, // 꺾은선 데이터
+              borderColor: "green", // 선 색상
+              borderWidth: 2,
+              fill: false, // 선 아래 색상 채우기 여부
+              pointBackgroundColor: "green", // 포인트 색상
+              tension: 0.4, // 부드러운 곡선을 위한 tension 값 설정
+
+              pointRadius: 10, // 포인트 크기
+            },
+          ],
+        },
+        options: {
+          responsive: false, // 크기 자동 조정 비활성화
+          scales: {
+            x: {
+              display: false, // x축 레이블 숨기기
+            },
+            y: {
+              display: false, // y축 레이블 숨기기
+              beginAtZero: true,
+              max: 6, // y축 최대값 설정
+              ticks: {
+                stepSize: 1, // y축 간격 설정
+                callback: function (value) {
+                  const labels = [
+                    "매우 힘들다",
+                    "힘들다",
+                    "보통이다",
+                    "괜찮다",
+                    "아주 괜찮다",
+                  ];
+                  return labels[value - 1]; // y축에 해당 텍스트 표시
+                },
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: false, // 레전드 숨기기
+            },
+          },
+        },
+      });
+
+      const ctx2 = document.getElementById("myChart2").getContext("2d");
+      const myChart2 = new Chart(ctx2, {
+        type: "line",
+        data: {
+          labels: ["미션1", "미션2", "미션3", "미션4", "미션5"], // x축 레이블
+          datasets: [
+            {
+              label: "기분 변화",
+              data: <%= anxiety_scores %>, // 꺾은선 데이터
+              borderColor: "green", // 선 색상
+              borderWidth: 2,
+              fill: false, // 선 아래 색상 채우기 여부
+              pointBackgroundColor: "green", // 포인트 색상
+              tension: 0.4, // 부드러운 곡선을 위한 tension 값 설정
+
+              pointRadius: 10, // 포인트 크기
+            },
+          ],
+        },
+        options: {
+          responsive: false, // 크기 자동 조정 비활성화
+          scales: {
+            x: {
+              display: false, // x축 레이블 숨기기
+            },
+            y: {
+              display: false, // y축 레이블 숨기기
+              beginAtZero: true,
+              max: 6, // y축 최대값 설정
+              ticks: {
+                stepSize: 1, // y축 간격 설정
+                callback: function (value) {
+                  const labels = [
+                    "매우 힘들다",
+                    "힘들다",
+                    "보통이다",
+                    "괜찮다",
+                    "아주 괜찮다",
+                  ];
+                  return labels[value - 1]; // y축에 해당 텍스트 표시
+                },
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: false, // 레전드 숨기기
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

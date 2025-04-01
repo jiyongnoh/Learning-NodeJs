@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta charset="utf-8" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+
+  <body style="margin: 0">
+    <div
+      id="p3"
+      style="
+        overflow: hidden;
+        position: relative;
+        background-color: white;
+        width: 909px;
+        height: 1286px;
+      "
+    >
+      <!-- Begin shared CSS values -->
+      <style class="shared-css" type="text/css">
+        .t {
+          transform-origin: bottom left;
+          z-index: 2;
+          position: absolute;
+          white-space: pre;
+          overflow: visible;
+          line-height: 1.5;
+        }
+        .t2 {
+          transform-origin: top left;
+          z-index: 2;
+          position: absolute;
+          /*word-break: keep-all; /* 단어 단위로 줄바꿈 */
+          white-space: normal;
+
+          overflow: visible;
+          line-height: 1.5;
+          text-align: center;
+        }
+        .text-container {
+          white-space: pre;
+        }
+        @supports (-webkit-touch-callout: none) {
+          .text-container {
+            white-space: normal;
+          }
+        }
+      </style>
+      <!-- End shared CSS values -->
+
+      <!-- Begin inline CSS -->
+      <style type="text/css">
+        #id_31 {
+          left: 110px;
+          top: 950px;
+          letter-spacing: -0.37px;
+          width: 22%;
+        }
+        #id_32 {
+          left: 355px;
+          top: 950px;
+          letter-spacing: -0.37px;
+          width: 22%;
+        }
+        #id_33 {
+          left: 600px;
+          top: 950px;
+          letter-spacing: -0.37px;
+          width: 22%;
+        }
+
+        #t1_3 {
+          left: 112px;
+          bottom: 1004px;
+          letter-spacing: -0.12px;
+        }
+        #t2_3 {
+          left: 305px;
+          bottom: 1004px;
+        }
+        #t3_3 {
+          left: 320px;
+          bottom: 1004px;
+          letter-spacing: -0.13px;
+        }
+        #t4_3 {
+          left: 112px;
+          bottom: 982px;
+          letter-spacing: -0.13px;
+        }
+        #t5_3 {
+          left: 112px;
+          bottom: 961px;
+          letter-spacing: -0.12px;
+        }
+        #t6_3 {
+          left: 112px;
+          bottom: 939px;
+          letter-spacing: -0.13px;
+        }
+        #t7_3 {
+          left: 136px;
+          bottom: 1058px;
+          letter-spacing: -0.78px;
+        }
+        #t8_3 {
+          left: 267px;
+          bottom: 1060px;
+          letter-spacing: -0.69px;
+        }
+        #t9_3 {
+          left: 107px;
+          bottom: 1056px;
+        }
+
+        /* copy & paste... */
+        #ta_3 {
+          left: 140px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #tb_3 {
+          left: 140px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+        #tc_3 {
+          left: 196px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #td_3 {
+          left: 196px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+        #te_3 {
+          left: 252px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #tf_3 {
+          left: 252px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+        #tg_3 {
+          left: 308px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #th_3 {
+          left: 308px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+        #ti_3 {
+          left: 364px;
+          bottom: 555px;
+          letter-spacing: -0.3px;
+        }
+        #tj_3 {
+          left: 420px;
+          bottom: 555px;
+          letter-spacing: -0.3px;
+        }
+        #tk_3 {
+          left: 476px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #tl_3 {
+          left: 476px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+        #tm_3 {
+          left: 530px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #tn_3 {
+          left: 534px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+
+        #to_3 {
+          left: 590px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #tp_3 {
+          left: 590px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+        #tq_3 {
+          left: 646px;
+          bottom: 555px;
+          letter-spacing: -0.3px;
+        }
+        #tr_3 {
+          left: 704px;
+          bottom: 565px;
+          letter-spacing: -0.3px;
+        }
+        #ts_3 {
+          left: 698px;
+          bottom: 544px;
+          letter-spacing: -0.3px;
+        }
+
+        #tt_3 {
+          left: 131px;
+          bottom: 319px;
+          letter-spacing: -0.3px;
+        }
+        #tu_3 {
+          left: 154px;
+          bottom: 303px;
+          letter-spacing: -0.28px;
+        }
+        #tv_3 {
+          left: 138px;
+          bottom: 286px;
+          letter-spacing: -0.31px;
+        }
+        #tw_3 {
+          left: 144px;
+          bottom: 270px;
+          letter-spacing: -0.31px;
+        }
+        #tx_3 {
+          left: 134px;
+          bottom: 254px;
+          letter-spacing: -0.33px;
+        }
+        #ty_3 {
+          left: 125px;
+          bottom: 237px;
+          letter-spacing: -0.32px;
+        }
+        #tz_3 {
+          left: 164px;
+          bottom: 221px;
+          letter-spacing: -0.34px;
+        }
+        #t10_3 {
+          left: 183px;
+          bottom: 346px;
+          letter-spacing: -0.68px;
+        }
+        #t11_3 {
+          left: 375px;
+          bottom: 319px;
+          letter-spacing: -0.3px;
+        }
+        #t12_3 {
+          left: 398px;
+          bottom: 303px;
+          letter-spacing: -0.28px;
+        }
+        #t13_3 {
+          left: 382px;
+          bottom: 286px;
+          letter-spacing: -0.31px;
+        }
+        #t14_3 {
+          left: 388px;
+          bottom: 270px;
+          letter-spacing: -0.31px;
+        }
+        #t15_3 {
+          left: 378px;
+          bottom: 254px;
+          letter-spacing: -0.33px;
+        }
+        #t16_3 {
+          left: 369px;
+          bottom: 237px;
+          letter-spacing: -0.32px;
+        }
+        #t17_3 {
+          left: 408px;
+          bottom: 221px;
+          letter-spacing: -0.34px;
+        }
+        #t18_3 {
+          left: 427px;
+          bottom: 346px;
+          letter-spacing: -0.68px;
+        }
+        #t19_3 {
+          left: 619px;
+          bottom: 319px;
+          letter-spacing: -0.3px;
+        }
+        #t1a_3 {
+          left: 643px;
+          bottom: 303px;
+          letter-spacing: -0.28px;
+        }
+        #t1b_3 {
+          left: 627px;
+          bottom: 286px;
+          letter-spacing: -0.31px;
+        }
+        #t1c_3 {
+          left: 632px;
+          bottom: 270px;
+          letter-spacing: -0.31px;
+        }
+        #t1d_3 {
+          left: 623px;
+          bottom: 254px;
+          letter-spacing: -0.33px;
+        }
+        #t1e_3 {
+          left: 613px;
+          bottom: 237px;
+          letter-spacing: -0.32px;
+        }
+        #t1f_3 {
+          left: 652px;
+          bottom: 221px;
+          letter-spacing: -0.34px;
+        }
+        #t1g_3 {
+          left: 671px;
+          bottom: 346px;
+          letter-spacing: -0.68px;
+        }
+
+        .s0_3 {
+          font-size: 15px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #231f20;
+        }
+        .s1_3 {
+          font-size: 15px;
+          font-family: AdobeMyungjoStd-Medium_6p;
+          color: #231f20;
+        }
+        .s2_3 {
+          font-size: 23px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #545454;
+        }
+        .s3_3 {
+          font-size: 20px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #545454;
+        }
+        .s4_3 {
+          font-size: 26px;
+          font-family: AdobeMyungjoStd-Medium_6p;
+          color: #545454;
+        }
+        .s5_3 {
+          font-size: 17px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #545454;
+        }
+        .s6_3 {
+          font-size: 14px;
+          font-family: AppleSDGothicNeoR00_6k;
+          color: #545454;
+        }
+        .s7_3 {
+          font-size: 17px;
+          font-family: AppleSDGothicNeoB00_6b;
+          color: #f16248;
+        }
+
+        canvas {
+          position: absolute;
+          left: 100px;
+          z-index: 2;
+        }
+
+        #myChart1 {
+          top: 350px;
+          width: 705px;
+          height: 320px;
+        }
+      </style>
+      <!-- End inline CSS -->
+
+      <!-- Begin embedded font definitions -->
+      <style id="fonts3" type="text/css">
+        @font-face {
+          font-family: AdobeMyungjoStd-Medium_6p;
+          src: url("fonts/AdobeMyungjoStd-Medium_6p.woff") format("woff");
+        }
+
+        @font-face {
+          font-family: AppleSDGothicNeoB00_6b;
+          src: url("fonts/AppleSDGothicNeoB00_6b.woff") format("woff");
+        }
+
+        @font-face {
+          font-family: AppleSDGothicNeoR00_6k;
+          src: url("fonts/AppleSDGothicNeoR00_6k.woff") format("woff");
+        }
+      </style>
+      <!-- End embedded font definitions -->
+
+      <!-- Begin page background -->
+      <div
+        id="pg3Overlay"
+        style="
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          z-index: 1;
+          background-color: rgba(0, 0, 0, 0);
+          -webkit-user-select: none;
+        "
+      ></div>
+      <div id="pg3" style="-webkit-user-select: none">
+        <object
+          width="909"
+          height="1286"
+          data="3/3.svg"
+          type="image/svg+xml"
+          id="pdf3"
+          style="
+            width: 909px;
+            height: 1286px;
+            -moz-transform: scale(1);
+            z-index: 0;
+          "
+        ></object>
+      </div>
+      <!-- End page background -->
+
+      <!-- Begin text definitions (Positioned/styled in CSS) -->
+      <div class="text-container">
+        <span id="t1_3" class="t s0_3">11가지 영역으로 우리 아이의 정서</span
+        ><span id="t2_3" class="t s1_3">·</span
+        ><span id="t3_3" class="t s0_3"
+          >행동 문제를 살펴봐요. 점수는 양호, 주의, 경고로 구분됩니다.
+        </span>
+        <span id="t4_3" class="t s0_3"
+          >주의(65점)는 경미한 어려움, 경고(70점)는 심각한 어려움을 반영해요. 이
+          검사의 평균은 50점이고,
+        </span>
+        <span id="t5_3" class="t s0_3"
+          >표준편차는 10점이에요. 우리 아이의 현재 마음 건강 지표가 다른
+          아이들과 비교할 때 어느 수준인지 살펴보세요.
+        </span>
+        <span id="t6_3" class="t s0_3"
+          >다만 이 검사는 선별(screening) 검사로 보다 정확한 진단을 위해서는
+          전문가의 도움을 받을 것을 권장합니다.
+        </span>
+        <span id="t7_3" class="t s2_3">정서 행동 검사 </span
+        ><span id="t8_3" class="t s3_3"
+          >(SOYES Emotional-Behavioral Problem Scale) </span
+        ><span id="t9_3" class="t s4_3">Ⅰ </span>
+        <span id="ta_3" class="t s5_3">학교 </span>
+        <span id="tb_3" class="t s5_3">생활 </span>
+        <span id="tc_3" class="t s5_3">친구 </span>
+        <span id="td_3" class="t s5_3">관계 </span>
+        <span id="te_3" class="t s5_3">가족 </span>
+        <span id="tf_3" class="t s5_3">관계 </span>
+        <span id="tg_3" class="t s5_3">자기 </span>
+        <span id="th_3" class="t s5_3">인식 </span>
+        <span id="ti_3" class="t s5_3">불안 </span
+        ><span id="tj_3" class="t s5_3">우울 </span>
+        <span id="tk_3" class="t s5_3">신체 </span>
+        <span id="tl_3" class="t s5_3">증상 </span>
+        <span id="tm_3" class="t s5_3">주의력 </span>
+        <span id="tn_3" class="t s5_3">문제 </span>
+        <span id="to_3" class="t s5_3">과잉 </span>
+        <span id="tp_3" class="t s5_3">행동 </span>
+        <span id="tq_3" class="t s5_3">기분 </span>
+        <span id="tr_3" class="t s5_3">분노 </span>
+        <span id="ts_3" class="t s5_3">공격성 </span>
+
+        <!--img src="3/img/1.png" style="position: absolute; left: 110px; top: 595px; width: 48px; height: 48px;z-index: 3;" />
+<img src="3/img/2.png" style="position: absolute; left: 174px; top: 595px; width: 48px; height: 48px;" />
+<img src="3/img/3.png" style="position: absolute; left: 238px; top: 595px; width: 48px; height: 48px;" />
+<img src="3/img/4.png" style="position: absolute; left: 302px; top: 595px; width: 48px; height: 48px;" />
+
+<img src="3/img/5.png" style="position: absolute; left: 366px; top: 595px; width: 48px; height: 48px;" />
+<img src="3/img/6.png" style="position: absolute; left: 430px; top: 595px; width: 48px; height: 48px;" />
+<img src="3/img/7.png" style="position: absolute; left: 494px; top: 595px; width: 48px; height: 48px;" />
+<img src="3/img/8.png" style="position: absolute; left: 558px; top: 595px; width: 48px; height: 48px;" />
+
+<img src="3/img/9.png" style="position: absolute; left: 622px; top: 595px; width: 48px; height: 48px;" />
+<img src="3/img/10.png" style="position: absolute; left: 686px; top: 595px; width: 48px; height: 48px;" />
+<img src="3/img/11.png" style="position: absolute; left: 750px; top: 595px; width: 48px; height: 48px;" /-->
+
+        <img
+          src="3/img/1.png"
+          style="
+            position: absolute;
+            left: 132px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+            z-index: 3;
+          "
+        />
+        <img
+          src="3/img/2.png"
+          style="
+            position: absolute;
+            left: 189px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+        <img
+          src="3/img/3.png"
+          style="
+            position: absolute;
+            left: 246px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+        <img
+          src="3/img/4.png"
+          style="
+            position: absolute;
+            left: 303px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+
+        <img
+          src="3/img/5.png"
+          style="
+            position: absolute;
+            left: 360px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+        <img
+          src="3/img/6.png"
+          style="
+            position: absolute;
+            left: 416px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+        <img
+          src="3/img/7.png"
+          style="
+            position: absolute;
+            left: 472px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+        <img
+          src="3/img/8.png"
+          style="
+            position: absolute;
+            left: 528px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+
+        <img
+          src="3/img/9.png"
+          style="
+            position: absolute;
+            left: 584px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+        <img
+          src="3/img/10.png"
+          style="
+            position: absolute;
+            left: 640px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+        <img
+          src="3/img/11.png"
+          style="
+            position: absolute;
+            left: 696px;
+            top: 645px;
+            width: 48px;
+            height: 48px;
+          "
+        />
+
+        <span id="t10_3" class="t s7_3">학교 생활 </span>
+        <img
+          src="imgs/img_result_1.png"
+          style="
+            position: absolute;
+            left: 163px;
+            top: 876px;
+            width: 92px;
+            height: 28px;
+          "
+        />
+        <span id="id_31" class="t2 s6_3">
+          OK...학교 생활은 친구들과의 관계가 완만하며 즐겁게 하며, 친구들과의
+          관계가 완만하며 신나면서도 즐겁고 재미있 학교생활을합니다.친구들과의
+          관계가 완만하며 즐겁고 재미있게 학교생활을합니다.
+        </span>
+
+        <span id="t18_3" class="t s7_3">친구 관계 </span>
+        <img
+          src="imgs/img_result_2.png"
+          style="
+            position: absolute;
+            left: 407px;
+            top: 876px;
+            width: 92px;
+            height: 28px;
+          "
+        />
+        <span id="id_32" class="t2 s6_3">
+          OK...친구 관계는 친구들과의 관계가 완만하며 즐겁게 하며, 친구들과의
+          관계가 완만하며 신나면서도 즐겁고 재미있 학교생활을합니다.친구들과의
+          관계가 완만하며 즐겁고 재미있게 학교생활을합니다.
+        </span>
+
+        <span id="t1g_3" class="t s7_3">가족 관계 </span>
+      </div>
+      <img
+        src="imgs/img_result_3.png"
+        style="
+          position: absolute;
+          left: 651px;
+          top: 876px;
+          width: 92px;
+          height: 28px;
+        "
+      />
+      <span id="id_33" class="t2 s6_3">
+        OK...가족 관계는 친구들과의 관계가 완만하며 즐겁게 하며, 친구들과의
+        관계가 완만하며 신나면서도 즐겁고 재미있 학교생활을합니다.친구들과의
+        관계가 완만하며 즐겁고 재미있게 학교생활을합니다.
+      </span>
+
+      <!-- End text definitions -->
+      <canvas id="myChart1" style="width: 705px; height: 350px"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+
+    <script>
+      // 막대 그래프 그리기
+      var ctx = document.getElementById("myChart1").getContext("2d");
+      var myChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [
+            "과목1",
+            "과목2",
+            "과목3",
+            "과목4",
+            "과목5",
+            "과목1",
+            "과목2",
+            "과목3",
+            "과목4",
+            "과목5",
+            "과목1",
+            "",
+          ],
+          datasets: [
+            {
+              label: "점수",
+              data: [65, 59, 80, 81, 56, 65, 59, 80, 65, 59, 80, 0],
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.2)",
+                "rgba(54, 162, 235, 0.2)",
+                "rgba(255, 206, 86, 0.2)",
+                "rgba(75, 192, 192, 0.2)",
+                "rgba(255, 99, 132, 0.2)",
+                "rgba(54, 162, 235, 0.2)",
+                "rgba(255, 206, 86, 0.2)",
+                "rgba(75, 192, 192, 0.2)",
+                "rgba(255, 99, 132, 0.2)",
+                "rgba(54, 162, 235, 0.2)",
+                "rgba(255, 206, 86, 0.2)",
+                "rgba(153, 102, 255, 0.2)",
+              ],
+              borderColor: [
+                "rgba(255, 99, 132, 1)",
+                "rgba(54, 162, 235, 1)",
+                "rgba(255, 206, 86, 1)",
+                "rgba(75, 192, 192, 1)",
+                "rgba(153, 102, 255, 1)",
+                "rgba(255, 99, 132, 1)",
+                "rgba(54, 162, 235, 1)",
+                "rgba(255, 206, 86, 1)",
+                "rgba(75, 192, 192, 1)",
+                "rgba(75, 192, 192, 1)",
+                "rgba(153, 102, 255, 1)",
+              ],
+              borderWidth: 2,
+              borderRadius: 25, // 막대 끝을 둥글게 처리
+              borderSkipped: "bottom", // 하단은 사각형, 상단은 둥글게 처리
+            },
+          ],
+        },
+        options: {
+          responsive: false, // 크기 자동 조정 비활성화
+          scales: {
+            x: {
+              display: false, // x축 레이블 숨기기
+            },
+            y: {
+              display: true, // y축 레이블 표시
+              beginAtZero: true,
+              max: 100, // y축의 최대값을 설정하여 상단에 간격을 둠
+              ticks: {
+                padding: 0, // y축의 숫자와 차트 상단의 간격을 설정
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: false, // 캡션(legend)을 숨기기
+            },
+            datalabels: {
+              display: function (context) {
+                // 데이터 값이 0이면 표시하지 않음
+                return context.dataset.data[context.dataIndex] !== 0;
+              },
+              anchor: "end", // 막대 끝에 점수를 위치
+              align: "end", // 텍스트 정렬
+              color: "#555", // 글자 색
+              font: {
+                weight: "bold",
+                size: 12, // 글자 크기 설정
+              },
+            },
+            annotation: {
+              annotations: {
+                line1: {
+                  type: "line",
+                  yMin: 65, // 기준선 60점 위치
+                  yMax: 65, // 기준선 60점 위치
+                  borderColor: "rgba(235, 162, 54, 1)", //'rgba(54, 162, 235, 1)',
+                  borderWidth: 2,
+                  borderDash: [5, 5], // 점선 설정
+                  label: {
+                    enabled: true,
+                    content: "주의",
+                    position: "end",
+                    backgroundColor: "orange", // 라벨 배경색 설정
+                    color: "white", // 라벨 글자색 설정
+                  },
+                },
+                line2: {
+                  type: "line",
+                  yMin: 70, // 기준선 65점 위치
+                  yMax: 70, // 기준선 65점 위치
+                  borderColor: "rgba(255, 99, 132, 1)",
+                  borderWidth: 2,
+                  label: {
+                    enabled: true,
+                    content: "경고",
+                    position: "end",
+                    backgroundColor: "red", // 라벨 배경색 설정
+                    color: "white", // 라벨 글자색 설정
+                  },
+                },
+              },
+            },
+          },
+        },
+        plugins: [ChartDataLabels, "annotation"], // Chart.js 데이터 레이블 플러그인 및 annotation 플러그인 추가
+      });
+      // 차트 배경색 설정
+      //ctx.canvas.style.backgroundColor = 'rgba(240, 240, 240, 1)'; // 차트 배경색 설정
+    </script>
+  </body>
+</html>
