@@ -23,7 +23,10 @@ RUN apt-get update && apt-get install -y \
   xdg-utils \
   wget \
   libgconf-2-4 \
-  libxss1
+  libxss1 \
+  fonts-noto-cjk \
+  fonts-noto-core \
+  fonts-freefont-ttf
 
 # 애플리케이션 디렉토리를 생성합니다.
 WORKDIR /usr/src/app

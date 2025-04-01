@@ -3264,7 +3264,9 @@ const reportController = {
         // page 9
         pupu_analysis_1: page9_pupu_data[0]?.slice(0, 170),
         pupu_analysis_2: page9_pupu_data[1]?.slice(0, 170),
-        pupu_analysis_3: page9_pupu_data[2]?.slice(0, 170),
+        pupu_analysis_3: page9_pupu_data[2]
+          ? page9_pupu_data[2]?.slice(0, 170)
+          : "",
       };
 
       // 변환할 EJS 파일들의 경로를 배열로 설정
