@@ -3076,7 +3076,6 @@ const reportController = {
         ct_select_data.length
           ? ct_select_data[0]
           : { ct_career_first: -1, ct_career_second: -1, ct_career_third: -1 };
-      // console.log(ct_career_first, ct_career_second, ct_career_third);
 
       // Page 9 Data
       const pupu_table = Consult_Table_Info["Log"].table;
