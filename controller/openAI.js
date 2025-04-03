@@ -1570,7 +1570,7 @@ const openAIController = {
   postOpenAIMypageCalendarData: async (req, res) => {
     const { EBTData } = req.body;
     let parseEBTdata, parsepUid, parseDate; // Parsing 변수
-
+    console.log(EBTData);
     try {
       // json 파싱
       if (typeof EBTData === "string") {
@@ -1604,7 +1604,13 @@ const openAIController = {
       const consult_log_attribute = Consult_Table_Info["Log"].attribute;
 
       // 1. SELECT USER JOIN EBT_Log
-      const select_ebt_join_query = `SELECT ${ebt_log_table}.${ebt_log_attribute.attr2}, ${ebt_log_table}.${ebt_log_attribute.attr3} FROM ${ebt_log_table} WHERE uid = '${parsepUid}' AND created_at LIKE '${parseDate}%' ORDER BY created_at DESC;`;
+      const select_ebt_join_query = `SELECT
+      ${ebt_log_table}.${ebt_log_attribute.attr2},
+      ${ebt_log_table}.${ebt_log_attribute.attr3}
+      FROM ${ebt_log_table}
+      WHERE uid = '${parsepUid}'
+      AND created_at LIKE '${parseDate}%'
+      ORDER BY created_at DESC;`;
 
       const ebt_join_data = await fetchUserData(
         connection_AI,
@@ -1613,7 +1619,13 @@ const openAIController = {
       // console.log(ebt_join_data);
 
       // 2. SELECT USER PT_Log
-      const select_pt_join_query = `SELECT ${pt_log_table}.${pt_log_attribute.attr2}, ${pt_log_table}.${pt_log_attribute.attr3} FROM ${pt_log_table} WHERE uid = '${parsepUid}' AND created_at LIKE '${parseDate}%' ORDER BY created_at DESC;`;
+      const select_pt_join_query = `SELECT
+      ${pt_log_table}.${pt_log_attribute.attr2},
+      ${pt_log_table}.${pt_log_attribute.attr3}
+      FROM ${pt_log_table}
+      WHERE uid = '${parsepUid}'
+      AND created_at LIKE '${parseDate}%'
+      ORDER BY created_at DESC;`;
 
       const pt_join_data = await fetchUserData(
         connection_AI,
@@ -1621,7 +1633,13 @@ const openAIController = {
       );
 
       // 3. SELECT USER Consult_Log
-      const select_consult_join_query = `SELECT ${consult_log_table}.${consult_log_attribute.attr1}, ${consult_log_table}.${consult_log_attribute.attr2} FROM ${consult_log_table} WHERE uid = '${parsepUid}' AND created_at LIKE '${parseDate}%' ORDER BY created_at DESC;`;
+      const select_consult_join_query = `SELECT
+      ${consult_log_table}.${consult_log_attribute.attr1},
+      ${consult_log_table}.${consult_log_attribute.attr2}
+      FROM ${consult_log_table}
+      WHERE uid = '${parsepUid}'
+      AND created_at LIKE '${parseDate}%'
+      ORDER BY created_at DESC;`;
 
       const consult_join_data = await fetchUserData(
         connection_AI,
@@ -1668,12 +1686,12 @@ const openAIController = {
       //   },
       // ];
 
-      res.json({
+      return res.json({
         ebt_data: ebt_join_data.map((el) => {
           return { ...el, ebt_analysis: JSON.parse(el.ebt_analysis).text };
         }),
         pt_data: pt_join_data.map((el) => {
-          return { ...el, pt_analysis: JSON.parse(el.pt_analysis).text };
+          return { ...el, pt_analysis: "" };
         }),
         // 값을 파싱해서 사용해야함!
         consult_data: consult_join_data.map((el) => {
@@ -1681,7 +1699,7 @@ const openAIController = {
         }),
       });
     } catch (err) {
-      console.error(err.sqlMessage);
+      console.error(err);
       res.status(500).json({
         message: "Server Error - 500",
       });
@@ -1962,7 +1980,7 @@ const openAIController = {
       // });
     }
   },
-  // User 정서행동 검사 11종 결과 반환
+  // 정서행동 검사 11종 결과 반환
   postOpenAIUserEBTResultData: async (req, res) => {
     const { EBTData } = req.body;
     let parseEBTdata, parsepUid;
@@ -2022,6 +2040,52 @@ const openAIController = {
 
       return res.status(200).json({
         message: resultArr.sort((a, b) => b.tScore - a.tScore),
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        message: "Server Error - 500",
+      });
+    }
+  },
+  // 성격 검사 결과 반환
+  postOpenAIUserPTResultData: async (req, res) => {
+    const { data } = req.body;
+    let parseData, parsepUid;
+
+    try {
+      // json 파싱
+      if (typeof data === "string") {
+        parseData = JSON.parse(data);
+      } else parseData = data;
+
+      const { pUid } = parseData;
+
+      // No pUid => return
+      if (!pUid) {
+        console.log("No pUid input value - 400");
+        return res.status(400).json({ message: "No pUid input value - 400" });
+      }
+      // pUid default값 설정
+      parsepUid = pUid;
+      console.log(`성격 검사 결과 반환 API 호출 - pUid: ${parsepUid}`);
+
+      const tableName = PT_Table_Info["Log"].table;
+
+      const select_query = `SELECT
+      persanl_result
+      FROM ${tableName}
+      WHERE uid = '${parsepUid}'
+      ORDER BY created_at DESC
+      LIMIT 1
+      `;
+
+      const ptResultData = await fetchUserData(connection_AI, select_query);
+
+      // console.log(ptResultData);
+
+      return res.status(200).json({
+        data: ptResultData.length ? ptResultData[0].persanl_result : "",
       });
     } catch (err) {
       console.error(err);
@@ -3263,10 +3327,12 @@ const reportController = {
 
         // page 9
         pupu_analysis_1: page9_pupu_data[0]?.slice(0, 170),
-        pupu_analysis_2: page9_pupu_data[1]?.slice(0, 170),
+        pupu_analysis_2: page9_pupu_data[1]
+          ? page9_pupu_data[1]?.slice(0, 170)
+          : "상담 내역이 없습니다!",
         pupu_analysis_3: page9_pupu_data[2]
           ? page9_pupu_data[2]?.slice(0, 170)
-          : "",
+          : "상담 내역이 없습니다!",
       };
 
       // 변환할 EJS 파일들의 경로를 배열로 설정

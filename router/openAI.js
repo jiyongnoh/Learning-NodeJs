@@ -27,6 +27,7 @@ const {
   getClearCookies,
   postOpenAIConsultingLogSave,
   postOpenAIUserEBTResultData,
+  postOpenAIUserPTResultData,
   getYoutubeContent,
   postOpenAIConsultSolutionData,
   postOpenAIGoogleDriveUpload,
@@ -47,7 +48,7 @@ const {
   postOpenAIConsultingNorthDelete,
 } = NorthController;
 
-// 북극이 감정일기 Controler
+// 결과보고서 Controller
 const { postReportTest } = reportController;
 
 // 토큰 유효성 검사 미들웨어
@@ -103,8 +104,10 @@ router.post("/report", postReportTest);
 router.post("/calendar", postOpenAIMypageCalendarData);
 // 마이페이지 데이터 반환
 router.post("/mypage", postOpenAIMypageData);
-// User EBT 데이터 반환
+// EBT 데이터 반환
 router.post("/ebtresult", postOpenAIUserEBTResultData);
+// PT 데이터 반환
+router.post("/ptresult", postOpenAIUserPTResultData);
 // 상담 solution 반환
 router.post("/solution", postOpenAIConsultSolutionData);
 
